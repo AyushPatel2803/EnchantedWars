@@ -6,7 +6,7 @@ function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<Gameboard />} />  {/* ✅ Now '/' correctly renders Gameboard */}
+                <Route path="/" element={<Gameboard />} />  {/* Now '/' correctly renders Gameboard */}
             </Routes>
         </Router>
     );
