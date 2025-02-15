@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MainPage.css';
 import ProfileIcon from './assets/profile.png'; // Default profile picture
 import SettingsIcon from './assets/setting.png'; // Settings icon
 
 function MainPage() {
-    // State for managing profile image, name, email, and modal visibility
+    const navigate = useNavigate(); // Hook from react-router-dom to navigate programmatically
     const [profileImage, setProfileImage] = useState(null); // To store the uploaded profile picture
     const [name, setName] = useState("Ayush Patel"); // To store user's name
     const [email, setEmail] = useState("ayush@example.com"); // To store user's email
@@ -31,6 +32,7 @@ function MainPage() {
         setTimeout(() => {
             setIsSearching(false);
             console.log('Match found!');
+            navigate.push('/gameboard'); // Navigate to the GameBoard page
         }, 3000); // Simulate a search being performed
     };
 
@@ -38,7 +40,6 @@ function MainPage() {
         <div className="main-container">
             {/* Profile Button */}
             <button className="logo-button" onClick={() => setShowProfile(true)}>
-                {/* Show the profile image if uploaded, otherwise show default */}
                 <img src={profileImage || ProfileIcon} alt="Profile" style={{ width: '100%', height: '100%' }} />
             </button>
 
@@ -83,7 +84,7 @@ function MainPage() {
 // Profile Modal Component
 function ProfileModal({ onClose, show, profileImage, setProfileImage, name, setName, email, setEmail, handleImageChange }) {
     const modalStyle = {
-        display: show ? 'block' : 'none', // Show the modal only if show is true
+        display: show ? 'block' : 'none',
         position: 'fixed',
         left: '50%',
         top: '50%',
@@ -101,7 +102,6 @@ function ProfileModal({ onClose, show, profileImage, setProfileImage, name, setN
         <div style={modalStyle}>
             <h2>Edit Profile</h2>
             
-            {/* Profile Picture Upload */}
             <div>
                 {profileImage ? (
                     <img src={profileImage} alt="Profile" style={{ width: '100px', height: '100px', borderRadius: '50%' }} />
@@ -116,7 +116,6 @@ function ProfileModal({ onClose, show, profileImage, setProfileImage, name, setN
                 />
             </div>
 
-            {/* Editable Name */}
             <p><strong>Name:</strong> 
                 <input 
                     type="text" 
@@ -126,7 +125,6 @@ function ProfileModal({ onClose, show, profileImage, setProfileImage, name, setN
                 />
             </p>
 
-            {/* Editable Email */}
             <p><strong>Email:</strong> 
                 <input 
                     type="email" 
@@ -144,7 +142,7 @@ function ProfileModal({ onClose, show, profileImage, setProfileImage, name, setN
 // Rules Modal Component
 function RulesModal({ onClose, show }) {
     const modalStyle = {
-        display: show ? 'block' : 'none', 
+        display: show ? 'block' : 'none',
         position: 'fixed',
         left: '50%',
         top: '50%',

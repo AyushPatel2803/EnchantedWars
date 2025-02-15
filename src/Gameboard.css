@@ -1,0 +1,31 @@
+/* styles.css */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #a9aa57;
+    font-family: Arial, sans-serif;
+}
+
+#board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+#player-board, #player-hand, #deck, #discard-pile {
+    border: 1px solid #285730;
+    padding: 10px;
+    width: 200px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#player-hand, #deck, #discard-pile {
+    height: 50px;
+}
+
