@@ -1,15 +1,12 @@
-// App.js
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import MainPage from './MainPage';
-import GameBoard from './Gameboard';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Gameboard from './Gameboard';
 
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" exact component={MainPage} />
-                <Route path="/gameboard" component={GameBoard} />
+                <Route path="/" element={<Gameboard />} />  {/* ✅ Now '/' correctly renders Gameboard */}
             </Routes>
         </Router>
     );

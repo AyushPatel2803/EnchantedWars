@@ -1,4 +1,6 @@
-// Define the card object with effects
+import React, { useState, useEffect } from 'react';
+import './Gameboard.css';  // Add this import at the top
+
 class Card {
     constructor(suit, value, effect) {
         this.suit = suit;
@@ -12,12 +14,12 @@ function createDeck() {
     const suits = ['Druid', 'Dark', 'Soul', 'Hero', 'Time', 'Poison', 'Item', 'Spell'];
     const values = ['Goblin', 'Hydra', 'Cyborg 20xx', 'Bullseye', 'Lost Soul', 'Moose Druid', 'Druid Mask', 'Decoy Doll', 'Critical Boost'];
     const effects = {
-        'Goblin': 'Pull a card from opponents deck',
+        'Goblin': 'Pull a card from opponent’s deck',
         'Hydra': 'User gets +1 to their hero roll',
-        'Cyborg 20xx': 'Destroy an opponents hero card',
+        'Cyborg 20xx': 'Destroy an opponent’s hero card',
         'Bullseye': 'Look at the top 3 cards in the deck and select 1 of the 3',
         'Lost Soul': 'Draw the last hero from the discard pile',
-        'Moose Druid': 'Destroy an opponents hero card',
+        'Moose Druid': 'Destroy an opponent’s hero card',
         'Decoy Doll': 'Card is sacrificed to save the hero',
         'Critical Boost': 'Discard a card and draw three from the deck'
     };
@@ -41,159 +43,98 @@ function shuffleDeck(deck) {
     }
 }
 
-// Game state variables
-let currentPlayer = 'player';
-let playerActionPoints = 3;
-let opponentActionPoints = 0;
-let playerHand = [];
-let opponentHand = [];
-let deck = [];
-let discardPile = [];
+function Gameboard() {
+    const [deck, setDeck] = useState([]);
+    const [playerHand, setPlayerHand] = useState([]);
+    const [discardPile, setDiscardPile] = useState([]);
+    const [playerActionPoints, setPlayerActionPoints] = useState(3);
+    const [currentPlayer, setCurrentPlayer] = useState('player');
 
-// Apply card effects
-function applyEffect(card) {
-    switch (card.value) {
-        case 'Goblin':
-            // Pull a card from opponent's deck
-            if (currentPlayer === 'player') {
-                playerHand.push(opponentHand.pop());
-            } else {
-                opponentHand.push(playerHand.pop());
-            }
-            break;
-        case 'Hydra':
-            // User gets +1 to their hero roll
-            console.log("User gets +1 to their hero roll");
-            break;
-        case 'Cyborg 20xx':
-            // Destroy an opponent's hero card
-            if (currentPlayer === 'player') {
-                discardPile.push(opponentHand.pop());
-            } else {
-                discardPile.push(playerHand.pop());
-            }
-            break;
-        case 'Bullseye':
-            // Look at the top 3 cards in the deck and select 1 of the 3
-            const topCards = deck.splice(0, 3);
-            const selectedCard = topCards[0]; // Select the first card for simplicity
-            if (currentPlayer === 'player') {
-                playerHand.push(selectedCard);
-            } else {
-                opponentHand.push(selectedCard);
-            }
-            deck.unshift(...topCards.slice(1)); // Return the other cards to the top of the deck
-            break;
-        case 'Lost Soul':
-            // Draw the last hero from the discard pile
-            const lastHero = discardPile.find(card => card.suit === 'Hero');
-            if (lastHero) {
-                discardPile = discardPile.filter(card => card !== lastHero);
-                if (currentPlayer === 'player') {
-                    playerHand.push(lastHero);
-                } else {
-                    opponentHand.push(lastHero);
-                }
-            }
-            break;
-        case 'Moose Druid':
-            // Destroy an opponent's hero card
-            if (currentPlayer === 'player') {
-                discardPile.push(opponentHand.pop());
-            } else {
-                discardPile.push(playerHand.pop());
-            }
-            break;
-        case 'Decoy Doll':
-            // Card is sacrificed to save the hero
-            console.log("Card is sacrificed to save the hero");
-            break;
-        case 'Critical Boost':
-            // Discard a card and draw three from the deck
-            if (currentPlayer === 'player') {
-                playerHand.pop();
-                playerHand.push(...deck.splice(0, 3));
-            } else {
-                opponentHand.pop();
-                opponentHand.push(...deck.splice(0, 3));
-            }
-            break;
-        default:
-            console.log("No effect");
-            break;
+    useEffect(() => {
+        const newDeck = createDeck();
+        shuffleDeck(newDeck);
+        setDeck(newDeck.slice(10)); // Keep the rest of the deck
+        setPlayerHand(newDeck.slice(0, 5)); // Draw initial hand
+    }, []);
+
+    function applyEffect(card) {
+        switch (card.value) {
+            case 'Goblin':
+                console.log("Goblin effect: Pull a card from opponent's deck (not implemented yet)");
+                break;
+            case 'Cyborg 20xx':
+            case 'Moose Druid':
+                console.log("Destroy an opponent's hero card");
+                setDiscardPile([...discardPile, card]);
+                setPlayerHand(playerHand.filter(c => c !== card));
+                break;
+            case 'Bullseye':
+                console.log("Look at the top 3 cards and pick one (not implemented yet)");
+                break;
+            case 'Lost Soul':
+                console.log("Draw last hero from discard pile");
+                break;
+            case 'Decoy Doll':
+                console.log("Card is sacrificed to save the hero");
+                break;
+            case 'Critical Boost':
+                console.log("Discard a card and draw three from the deck (not implemented yet)");
+                break;
+            default:
+                console.log("No effect");
+                break;
+        }
     }
-}
 
-function updateDisplay() {
-    document.getElementById('deck').innerText = `Deck: ${deck.length} cards`;
-    document.getElementById('player-hand').innerText = `Hand: ${playerHand.map(card => `${card.value} of ${card.suit} (${card.effect})`).join(', ')}`;
-    document.getElementById('discard-pile').innerText = `Discard Pile: ${discardPile.length} cards`;
-    document.getElementById('action-points').innerText = `Action Points: ${currentPlayer === 'player' ? playerActionPoints : opponentActionPoints}`;
-}
+    function playCard(card) {
+        if (!card) return;
 
-// Handle end of turn
-function endTurn() {
-    currentPlayer = currentPlayer === 'player' ? 'opponent' : 'player';
-    playerActionPoints = currentPlayer === 'player' ? 3 : 0;
-    opponentActionPoints = currentPlayer === 'opponent' ? 3 : 0;
-    updateDisplay();
-}
-
-// Play a card (consume 1 action point)
-function playCard(card) {
-    if (currentPlayer === 'player') {
-        if (playerActionPoints > 0) {
-            playerActionPoints--;
+        if (currentPlayer === 'player' && playerActionPoints > 0) {
+            setPlayerActionPoints(playerActionPoints - 1);
             applyEffect(card);
-            playerHand = playerHand.filter(c => c !== card);
+            setPlayerHand(playerHand.filter(c => c !== card));
         }
-    } else {
-        if (opponentActionPoints > 0) {
-            opponentActionPoints--;
-            applyEffect(card);
-            opponentHand = opponentHand.filter(c => c !== card);
+
+        if (playerActionPoints === 1) {
+            endTurn();
         }
     }
 
-    if (playerActionPoints === 0 || opponentActionPoints === 0) {
-        endTurn();
-    } else {
-        updateDisplay();
+    function drawCard() {
+        if (deck.length === 0) {
+            console.warn("Deck is empty, cannot draw a card.");
+            return;
+        }
+
+        if (currentPlayer === 'player' && playerActionPoints > 0) {
+            setPlayerActionPoints(playerActionPoints - 1);
+            setPlayerHand([...playerHand, deck[0]]);
+            setDeck(deck.slice(1));
+        }
+
+        if (playerActionPoints === 1) {
+            endTurn();
+        }
     }
+
+    function endTurn() {
+        setCurrentPlayer(currentPlayer === 'player' ? 'opponent' : 'player');
+        setPlayerActionPoints(3);
+    }
+
+    return (
+        <div>
+            <h1>Enchanted Wars</h1>
+            <div>Deck: {deck.length} cards</div>
+            <div>Hand: {playerHand.map(card => `${card.value} of ${card.suit} (${card.effect})`).join(', ')}</div>
+            <div>Discard Pile: {discardPile.length} cards</div>
+            <div>Action Points: {playerActionPoints}</div>
+            <button onClick={() => drawCard()}>Draw Card</button>
+            {playerHand.map((card, index) => (
+                <button key={index} onClick={() => playCard(card)}>Play {card.value}</button>
+            ))}
+        </div>
+    );
 }
 
-// Draw a card (consume 1 action point)
-function drawCard() {
-    if (currentPlayer === 'player') {
-        if (playerActionPoints > 0) {
-            playerActionPoints--;
-            playerHand.push(deck.pop());
-        }
-    } else {
-        if (opponentActionPoints > 0) {
-            opponentActionPoints--;
-            opponentHand.push(deck.pop());
-        }
-    }
-
-    if (playerActionPoints === 0 || opponentActionPoints === 0) {
-        endTurn();
-    } else {
-        updateDisplay();
-    }
-}
-
-// Initialize the game
-function initializeGame() {
-    deck = createDeck();
-    shuffleDeck(deck);
-
-    playerHand = deck.splice(0, 5);
-    opponentHand = deck.splice(0, 5);
-
-    updateDisplay();
-}
-
-// Start the game when the page loads
-window.onload = initializeGame;
-
+export default Gameboard;

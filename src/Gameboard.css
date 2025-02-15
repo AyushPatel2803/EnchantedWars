@@ -1,31 +1,24 @@
-/* styles.css */
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #a9aa57;
+.gameboard {
     font-family: Arial, sans-serif;
+    padding: 20px;
 }
 
-#board {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
+.gameboard h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
 }
 
-#player-board, #player-hand, #deck, #discard-pile {
-    border: 1px solid #285730;
-    padding: 10px;
-    width: 200px;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.game-info {
+    margin-bottom: 10px;
 }
 
-#player-hand, #deck, #discard-pile {
-    height: 50px;
+button {
+    margin: 5px;
+    padding: 8px;
+    font-size: 14px;
+    cursor: pointer;
 }
 
+button:hover {
+    background-color: #ddd;
+}
