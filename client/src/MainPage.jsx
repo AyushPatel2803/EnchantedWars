@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './MainPage.css';
 import ProfileIcon from './assets/profile.png'; // Default profile picture
 import SettingsIcon from './assets/setting.png'; // Settings icon
+import { useNavigate } from 'react-router-dom';
 
 function MainPage() {
     // State for managing profile image, name, email, and modal visibility
@@ -11,6 +12,7 @@ function MainPage() {
     const [showProfile, setShowProfile] = useState(false); // Show/Hide Profile Modal
     const [showRules, setShowRules] = useState(false); // Show/Hide Rules Modal
     const [isSearching, setIsSearching] = useState(false); // Searching for match state
+    const navigate = useNavigate();
 
     // Handle Profile Image Change
     const handleImageChange = (event) => {
@@ -27,11 +29,20 @@ function MainPage() {
     // Handle Find Match Button Click
     const handleFindMatch = () => {
         setIsSearching(true);
-        console.log('Searching for match...');
-        setTimeout(() => {
-            setIsSearching(false);
-            console.log('Match found!');
-        }, 3000); // Simulate a search being performed
+        // console.log('Searching for match...');
+        fetch('http://localhost:3000/match')
+            .then(response => response.json())
+            .then(data => {
+                if (data) {
+                    navigate('/game');
+                }
+                console.log('Match data:', data)
+            })
+            .catch(error => console.error('Error fetching match:', error));
+        // setTimeout(() => {
+        //     setIsSearching(false);
+        //     console.log('Match found!');
+        // }, 3000); // Simulate a search being performed
     };
 
     return (
