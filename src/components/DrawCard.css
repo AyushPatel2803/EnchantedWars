@@ -1,0 +1,47 @@
+.card{
+    width: 180px;
+    height: 250px;
+    background-image: url('/src/assets/defaultcard.png');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    position: absolute;
+    top: 37.5%;
+}
+.card:hover {
+    transform: scale(1.1);
+}
+
+ .card-content {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center;
+
+}
+
+/*.card-hovered {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.card.clicked {
+    animation: clickAnimation 0.3s ease;
+  }
+  
+  @keyframes clickAnimation {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(0.95);
+    }
+    100% {
+      transform: scale(1);
+    }
+  } */
