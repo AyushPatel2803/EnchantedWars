@@ -4,6 +4,8 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
+app.use(cors());
+
 const server = http.createServer(app); // Create an HTTP server
 
 const io = new Server(server, {
@@ -12,8 +14,6 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
-
-app.use(cors());
 
 // WebSocket connection handling
 io.on("connection", (socket) => {
@@ -24,16 +24,12 @@ io.on("connection", (socket) => {
     io.emit("player_joined", username);
   });
 
-//   socket.on("play_card", (cardData) => {
-//     console.log(`Card played: ${cardData.card}`);
-//     io.emit("card_played", cardData); // Broadcast to all players
-//   });
-
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
   });
 });
 
-server.listen(3000, () => {
-  console.log("Server running on port 3000");
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

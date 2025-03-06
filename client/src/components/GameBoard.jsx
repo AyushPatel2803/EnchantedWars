@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Timer from "./Timer";
 import ActionPoints from "./ActionPoints";
 import DrawCard from "./DrawCard";
+import { io } from "socket.io-client";
+import { useLocation } from "react-router-dom";
 import "./GameBoard.css";
 
 // Import Card Images
@@ -11,35 +13,39 @@ import DruidMask from "../assets/DruidMask.png";
 import DecoyDoll from "../assets/DecoyDoll.png";
 import CriticalBoost from "../assets/CriticalBoost.png";
 
+const socket = io("http://localhost:3000"); // Adjust based on your backend port
+
 const GameBoard = () => {
+    const location = useLocation();
+    const { playerName } = location.state || { playerName: "Unknown Player" }; // Default to 'Unknown Player' if no name is provided
+
     // Define your actual card data
     const initialCards = [
-        {
-            id: 1,
-            image: MooseDruid,
-        },
-        {
-            id: 2,
-            image: DarkGoblin,
-        },
-        {
-            id: 3,
-            image: DruidMask,
-        },
-        {
-            id: 4,
-            image: DecoyDoll,
-        },
-        {
-            id: 5,
-            image: CriticalBoost,
-        },
+        { id: 1, image: MooseDruid },
+        { id: 2, image: DarkGoblin },
+        { id: 3, image: DruidMask },
+        { id: 4, image: DecoyDoll },
+        { id: 5, image: CriticalBoost },
     ];
 
     // State variables
     const [playerHand, setPlayerHand] = useState(initialCards);
     const [playedCards, setPlayedCards] = useState(Array(5).fill(null)); // 5 slots for played cards
     const [discardPile, setDiscardPile] = useState([]);
+
+    useEffect(() => {
+        socket.on("connect", () => {
+            console.log(`Connected to server with ID: ${socket.id}`);
+        });
+
+        socket.on("disconnect", () => {
+            console.log(`Disconnected from server`);
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, []);
 
     // Function to discard the entire hand
     const discardAllCards = () => {
@@ -83,7 +89,9 @@ const GameBoard = () => {
             <Timer />
             <ActionPoints />
             <DrawCard />
-            <h1>GameBoard</h1>
+
+            {/* Player's name in the top right corner */}
+            <div style={styles.playerName}>{playerName}</div>
 
             {/* Play Area */}
             <div style={styles.playArea}>
@@ -96,11 +104,7 @@ const GameBoard = () => {
                     >
                         {card ? (
                             <div style={styles.card}>
-                                <img
-                                    src={card.image}
-                                    alt={`Card ${card.id}`}
-                                    style={styles.cardImage}
-                                />
+                                <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
                             </div>
                         ) : (
                             <div style={styles.emptySlot}>Slot {index + 1}</div>
@@ -113,32 +117,18 @@ const GameBoard = () => {
             <h2>Player Hand</h2>
             <div style={styles.hand}>
                 {playerHand.map((card) => (
-                    <div
-                        key={card.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, card)}
-                        style={styles.card}
-                    >
-                        <img
-                            src={card.image}
-                            alt={`Card ${card.id}`}
-                            style={styles.cardImage}
-                        />
+                    <div key={card.id} draggable onDragStart={(e) => handleDragStart(e, card)} style={styles.card}>
+                        <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
                     </div>
                 ))}
             </div>
 
             {/* Discard Pile and Discard Button */}
             <div style={styles.discardContainer}>
-
                 <div style={styles.discardPile}>
                     {lastDiscardedCard ? (
                         <div style={styles.card}>
-                            <img
-                                src={lastDiscardedCard.image}
-                                alt={`Card ${lastDiscardedCard.id}`}
-                                style={styles.cardImage}
-                            />
+                            <img src={lastDiscardedCard.image} alt={`Card ${lastDiscardedCard.id}`} style={styles.cardImage} />
                         </div>
                     ) : (
                         <div style={styles.slot}>
@@ -164,6 +154,14 @@ const styles = {
         background: "#162C24",
         height: "800px",
     },
+    playerName: {
+        position: "absolute",
+        top: "20px",
+        right: "20px",
+        color: "#fff",
+        fontSize: "20px",
+        fontWeight: "bold",
+    },
     hand: {
         display: "flex",
         justifyContent: "center",
@@ -182,7 +180,7 @@ const styles = {
     cardImage: {
         width: "100%",
         height: "100%",
-        objectFit: "cover",// Ensure the image fits within the card
+        objectFit: "cover", // Ensure the image fits within the card
     },
     playArea: {
         display: "flex",
