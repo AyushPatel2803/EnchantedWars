@@ -21,6 +21,9 @@ function MainPage() {
             navigate('/game', { state: { playerName } }); // Pass player name to game screen
         }, 2000); // Simulate a delay for finding a match
     };
+    const handleLocalMatch = () => {
+        navigate('/local-game'); // Pass player name to local game screen
+    }
 
     return (
         <div className="main-page">
@@ -34,6 +37,9 @@ function MainPage() {
                 />
                 <button onClick={handleFindMatch} disabled={isSearching || !playerName}>
                     {isSearching ? 'Searching...' : 'Find Match'}
+                </button>
+                <button onClick={handleLocalMatch}>
+                    Local Match
                 </button>
             </div>
         </div>
