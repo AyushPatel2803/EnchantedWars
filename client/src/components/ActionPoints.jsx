@@ -3,7 +3,7 @@ import React from "react";
 const ActionPoints = ({ points }) => {
     return (
         <div style={StyleSheet.container}>
-            <h3>Action Points: {points} 3 </h3>
+            <h3>Action Points: {points}</h3>
         </div>
     );
 }
@@ -11,7 +11,7 @@ const ActionPoints = ({ points }) => {
 const StyleSheet = {
     container: {
         position: "absolute",
-        left: "20px", 
+        left: "20px",
         bottom: "10%",
         background: "red",
         color: "white",
