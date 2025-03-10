@@ -6,7 +6,7 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 
-const server = http.createServer(app); // Create an HTTP server
+const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
@@ -15,17 +15,32 @@ const io = new Server(server, {
   },
 });
 
+let waitingPlayer = null; // Stores the first player waiting for a match
+
 // WebSocket connection handling
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-  socket.on("join_game", (username) => {
-    console.log(`${username} joined the game.`);
-    io.emit("player_joined", username);
+  socket.on("find_match", (username) => {
+    if (waitingPlayer) {
+      // Pair the two players
+      const opponent = waitingPlayer;
+      io.to(opponent.id).emit("match_found", { opponent: username });
+      io.to(socket.id).emit("match_found", { opponent: opponent.username });
+
+      waitingPlayer = null; // Reset queue
+    } else {
+      waitingPlayer = { id: socket.id, username }; // Store the first player
+    }
   });
 
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
+
+    // Remove from queue if they were waiting
+    if (waitingPlayer && waitingPlayer.id === socket.id) {
+      waitingPlayer = null;
+    }
   });
 });
 

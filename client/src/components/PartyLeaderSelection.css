@@ -1,0 +1,71 @@
+/* components/PartyLeaderSelection.css */
+.party-leader-selection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    background-color: #162C24;
+    min-height: 100vh;
+}
+
+.leader-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    width: 100%;
+    margin: 2rem 0;
+}
+
+.leader-card {
+    position: relative;
+    border: 3px solid #4CAF50;
+    border-radius: 10px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #1E7149;
+}
+
+.leader-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
+.leader-card.selected {
+    border-color: #FFD700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.leader-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.leader-card p {
+    margin-top: 1rem;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+}
+
+.confirm-button {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.confirm-button:disabled {
+    background-color: #888;
+    cursor: not-allowed;
+}
+
+.confirm-button:hover:not(:disabled) {
+    background-color: #45a049;
+}

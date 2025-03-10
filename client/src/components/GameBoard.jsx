@@ -32,6 +32,8 @@ const GameBoard = () => {
     const [playerHand, setPlayerHand] = useState(initialCards);
     const [playedCards, setPlayedCards] = useState(Array(5).fill(null)); // 5 slots for played cards
     const [discardPile, setDiscardPile] = useState([]);
+    const [partyLeaderChosen, setPartyLeaderChosen] = useState(false);
+    const [partyLeader, setPlayerLeader] = useState(null);
 
     useEffect(() => {
         socket.on("connect", () => {
@@ -81,10 +83,16 @@ const GameBoard = () => {
         });
     };
 
+    const choosePartyLeader = (card) => {
+        setPartyLeaderChosen
+        setPlayerLeader(card);
+    }
+
     // Get the last discarded card (or null if the discard pile is empty)
     const lastDiscardedCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null;
 
     return (
+    <div className="game-board-container"> 
         <div style={styles.gameBoard}>
             <Timer />
             <ActionPoints />
@@ -141,85 +149,127 @@ const GameBoard = () => {
                 </button>
             </div>
         </div>
+      </div>  
     );
 };
 
 // Styles
+// ... (keep the imports and initial code the same)
+
 const styles = {
     gameBoard: {
         position: "relative",
         textAlign: "center",
-        padding: "20px",
+        padding: "2vh",
         border: "4px solid black",
         background: "#162C24",
-        height: "800px",
+        height: "100vh", // Use viewport height instead of fixed pixels
+        maxWidth: "1600px", // Add a max-width
+        margin: "0 auto", // Center the game board
+        display: "flex",
+        flexDirection: "column",
     },
     playerName: {
         position: "absolute",
-        top: "20px",
-        right: "20px",
+        top: "2vh",
+        right: "2vw",
         color: "#fff",
-        fontSize: "20px",
+        fontSize: "1.2rem",
         fontWeight: "bold",
     },
     hand: {
         display: "flex",
         justifyContent: "center",
-        gap: "10px",
-        flexWrap: "wrap", // Allow cards to wrap to the next line if necessary
+        gap: "1vw",
+        flexWrap: "wrap",
+        margin: "2vh 0",
+        padding: "0 2vw",
     },
     card: {
-        width: "150px", // Fixed width for cards
-        height: "200px", // Fixed height for cards
+        width: "calc(150px + 2vw)", // Responsive card width
+        height: "calc(200px + 2vh)", // Responsive card height
         border: "2px solid #888",
         borderRadius: "10px",
         overflow: "hidden",
         cursor: "grab",
-        flexShrink: 0, // Prevent cards from shrinking
+        flexShrink: 0,
+        maxWidth: "180px", // Add maximum width
+        maxHeight: "240px", // Add maximum height
     },
     cardImage: {
         width: "100%",
         height: "100%",
-        objectFit: "cover", // Ensure the image fits within the card
+        objectFit: "cover",
     },
     playArea: {
         display: "flex",
         justifyContent: "center",
-        gap: "10px",
-        marginTop: "20px",
+        gap: "1vw",
+        margin: "2vh 0",
+        flexWrap: "wrap",
+        padding: "0 2vw",
     },
     slot: {
-        width: "150px", // Same size as cards
-        height: "200px", // Same size as cards
+        width: "calc(150px + 2vw)", // Match card dimensions
+        height: "calc(200px + 2vh)",
         border: "2px dashed #ccc",
         borderRadius: "10px",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#1E7149",
+        maxWidth: "180px",
+        maxHeight: "240px",
     },
     emptySlot: {
         color: "#888",
-        fontSize: "14px",
+        fontSize: "0.875rem",
     },
     discardContainer: {
         position: "absolute",
-        bottom: "20px",
-        right: "20px",
+        bottom: "2vh",
+        right: "2vw",
         textAlign: "center",
     },
     discardPile: {
-        marginBottom: "10px", // Space between discard pile and button
+        marginBottom: "1vh",
     },
     discardButton: {
-        padding: "10px 20px",
-        fontSize: "16px",
+        padding: "1vh 2vw",
+        fontSize: "1rem",
         cursor: "pointer",
         backgroundColor: "#4CAF50",
         color: "#fff",
         border: "none",
         borderRadius: "5px",
+        minWidth: "100px",
     },
 };
+
+// Add media queries for different screen sizes
+const mediaQueries = {
+    '@media (max-width: 1200px)': {
+        card: {
+            width: "calc(120px + 1vw)",
+            height: "calc(160px + 1vh)",
+        },
+        slot: {
+            width: "calc(120px + 1vw)",
+            height: "calc(160px + 1vh)",
+        },
+    },
+    '@media (max-width: 768px)': {
+        card: {
+            width: "calc(100px + 1vw)",
+            height: "calc(133px + 1vh)",
+        },
+        slot: {
+            width: "calc(100px + 1vw)",
+            height: "calc(133px + 1vh)",
+        },
+    },
+};
+
+// You might also want to add some CSS in your GameBoard.css file:
 
 export default GameBoard;
