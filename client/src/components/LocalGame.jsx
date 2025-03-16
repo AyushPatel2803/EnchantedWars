@@ -15,12 +15,19 @@ import Bullseye from "../assets/Bullseye.png";
 import Hydra from "../assets/Hydra.png";
 import Cyborg20xx from "../assets/Cyborg 20xx.png";
 
+import dice1 from "../assets/dice1.png";
+import dice2 from "../assets/dice2.png";
+import dice3 from "../assets/dice3.png";
+import dice4 from "../assets/dice4.png";
+import dice5 from "../assets/dice5.png";
+import dice6 from "../assets/dice6.png";
+
 const GameBoard = () => {
     // Define your actual card data with types and affinities
     const cardList = [
         { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid" }, // Moose Druid has Druid affinity
         { id: 2, image: DarkGoblin, type: "Hero", affinity: "Dark" }, // Dark Goblin has Dark affinity
-        { id: 3, image: DruidMask, type: "Item", affinity: null }, // Items and spells have no affinity
+        { id: 3, image: DruidMask, type: "Item", affinity: "Druid" }, // Items and spells have no affinity
         { id: 4, image: DecoyDoll, type: "Item", affinity: null },
         { id: 5, image: CriticalBoost, type: "Spell", affinity: null },
         { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" },
@@ -50,7 +57,7 @@ const GameBoard = () => {
     const [currentPlayer, setCurrentPlayer] = useState(1); // Initial player turn
 
     // Function to check action points and switch turn if necessary
-    const checkActionPoints = () => {
+    function checkActionPoints () {
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
         if (currentActionPoints <= 0) {
             switchTurn();
@@ -59,7 +66,9 @@ const GameBoard = () => {
         return true;
     };
 
-    const checkWinCondition = () => {
+    let intervalId = setInterval(checkWinCondition, 1000);
+
+    function checkWinCondition () {
         const checkPlayerWin = (playedCards) => {
             if (playedCards.every((card) => card && card.type === "Hero")) {
                 const affinities = playedCards.map((card) => card.affinity);
@@ -71,40 +80,28 @@ const GameBoard = () => {
             }
         };
         if (checkPlayerWin(playedCards1)) {
+            clearInterval(intervalId);
             const playAgain = window.confirm("Player 1 wins! Do you want to play again?");
             if (playAgain) {
-                resetGame();
+                window.location.href = "/local-game";
             } 
             else {
-                window.location.href = "/MainPage"; // Navigate to MainPage.jsx
+                window.location.href = "/"; // Navigate to MainPage.jsx
             }
         } 
         else if (checkPlayerWin(playedCards2)) {
+            clearInterval(intervalId);
             const playAgain = window.confirm("Player 2 wins! Do you want to play again?");
             if (playAgain) {
-                resetGame();
+                window.location.href = "/local-game";
             } 
             else {
-                window.location.href = "/MainPage"; // Navigate to MainPage.jsx
+                window.location.href = "/"; // Navigate to MainPage.jsx
             }
         }
     };
-
-    // Function to reset the game
-    const resetGame = () => {
-        setPlayer1Hand(generateHand());
-        setPlayer2Hand(generateHand());
-        setPlayedCards1(Array(5).fill(null));
-        setPlayedCards2(Array(5).fill(null));
-        setDiscardPile([]);
-        setPlayer1ActionPoints(3);
-        setPlayer2ActionPoints(3);
-        setCurrentPlayer(1);
-    };
-
     // Function to handle drawing a card
     const handleDrawCard = () => {
-        checkWinCondition()
         if (!checkActionPoints()) return; // Check action points before proceeding
 
         const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
@@ -123,6 +120,7 @@ const GameBoard = () => {
         // Add the random card to the current player's hand
         setCurrentHand((prevHand) => [...prevHand, randomCard]);
         setCurrentActionPoints((prev) => prev - 1);
+
         if (currentActionPoints - 1 === 0) {
             switchTurn();
         }
@@ -130,26 +128,39 @@ const GameBoard = () => {
 
     // Function to discard the entire hand
     const discardAllCards = () => {
-        if (!checkActionPoints()) return; // Check action points before proceeding
-
+        const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
         const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
         const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
-
-        if (currentHand.length === 0) {
+    
+        // Check if the player has at least 2 action points
+        if (currentActionPoints < 2) {
+            alert("Not enough action points to discard all cards!");
+            return;
+        }
+    
+        else if (currentHand.length === 0) {
             alert("No cards to discard!");
             return;
         }
-
+    
+        // Deduct 2 action points
+        setCurrentActionPoints((prev) => prev - 2);
+    
         // Move all cards from the current player's hand to the discard pile
         setDiscardPile((prevDiscardPile) => [
             ...prevDiscardPile,
             ...currentHand,
         ]);
+        
+        const newCards = generateHand(); // Assume drawNewCards is a function that draws a specified number of cards
+        setCurrentHand(newCards);
 
-        // Clear the current player's hand
-        setCurrentHand([]);
+        if (currentActionPoints - 2 === 0) {
+            switchTurn();
+        }
     };
-
+    
     // Drag-and-drop handlers
     const handleDragStart = (e, card) => {
         e.dataTransfer.setData("card", JSON.stringify(card)); // Store the card data
@@ -160,6 +171,7 @@ const GameBoard = () => {
     };
 
     const handleDrop = (e, slotIndex) => {
+
         e.preventDefault();
 
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
@@ -168,42 +180,51 @@ const GameBoard = () => {
         const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
         const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
         const setCurrentPlayedCards = currentPlayer === 1 ? setPlayedCards1 : setPlayedCards2;
-
+        
         const card = JSON.parse(e.dataTransfer.getData("card")); // Retrieve the card data
-
+        
+        // Track the action points before attempting the play
+        const initialActionPoints = currentActionPoints;
+        
         // Determine if the slot is accessible by the current player
         if ((currentPlayer === 1 && slotIndex >= 0 && slotIndex < 5) || (currentPlayer === 2 && slotIndex >= 0 && slotIndex < 5)) {
             // Ensure only hero cards or item cards can be placed
             if (card.type === "Hero" || (card.type === "Item" && currentPlayedCards[slotIndex]?.type === "Hero")) {
                 setCurrentPlayedCards((prevPlayed) => {
                     const newPlayed = [...prevPlayed];
-
+        
+                    // Check if a hero card is already present in the slot
+                    if (card.type === "Hero" && newPlayed[slotIndex]?.type === "Hero") {
+                        alert("You can't place another hero card in this slot!");
+                        return prevPlayed; // No need to update action points or hand as play is unsuccessful
+                    }
+        
                     if (card.type === "Hero") {
                         newPlayed[slotIndex] = { ...card, items: [] }; // Place the hero card in the specified slot with an empty items array
                     } else if (card.type === "Item" && newPlayed[slotIndex]?.type === "Hero") {
                         // Check if the hero card already has an item attached
-                        if (newPlayed[slotIndex].items.length === 0) {
+                        if (newPlayed[slotIndex].items.length < 1) {
                             newPlayed[slotIndex].items.push(card); // Attach the item to the hero card
                         } else {
-                            alert("A hero card can only hold one item!");
-                            return prevPlayed;
+                            alert("The hero card already has an item attached!");
+                            return prevPlayed; // No need to update action points or hand as play is unsuccessful
                         }
                     } else {
                         alert("You can only place hero cards or attach items to hero cards!");
-                        return prevPlayed;
+                        return prevPlayed; // No need to update action points or hand as play is unsuccessful
                     }
-
                     return newPlayed;
                 });
-
-                setCurrentHand((prevHand) => prevHand.filter((c) => c.uniqueId !== card.uniqueId));
-                setCurrentActionPoints((prev) => prev - 1);
-
-                // Check if the action points are zero to switch turn
-                if (currentActionPoints - 1 === 0) {
-                    switchTurn();
+        
+                // If the play was successful, update the hand and action points
+                if (initialActionPoints === currentActionPoints) {
+                    setCurrentHand((prevHand) => prevHand.filter((c) => c.uniqueId !== card.uniqueId));
+                    setCurrentActionPoints((prev) => prev - 1);
+                    // Check if the action points are zero to switch turn
+                    if (currentActionPoints - 1 === 0) {
+                        switchTurn();
+                    }
                 }
-                checkWinCondition()
             }
         }
     };
