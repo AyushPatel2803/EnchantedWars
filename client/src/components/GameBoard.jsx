@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import Timer from "./Timer";
 import ActionPoints from "./ActionPoints";
 import DrawCard from "./DrawCard";
+import PartyLeaderSelection from "./PartyLeaderSelection"; // Import the new component
+import OpponentCardSlot from "./OpponentCardSlot"; // Import the new component
 import { io } from "socket.io-client";
 import { useLocation } from "react-router-dom";
 import "./GameBoard.css";
@@ -31,9 +33,10 @@ const GameBoard = () => {
     // State variables
     const [playerHand, setPlayerHand] = useState(initialCards);
     const [playedCards, setPlayedCards] = useState(Array(5).fill(null)); // 5 slots for played cards
+    const [opponentPlayedCards, setOpponentPlayedCards] = useState(Array(5).fill(null)); // 5 slots for opponent played cards
     const [discardPile, setDiscardPile] = useState([]);
-    const [partyLeaderChosen, setPartyLeaderChosen] = useState(false);
-    const [partyLeader, setPlayerLeader] = useState(null);
+    const [selectedLeader, setSelectedLeader] = useState(null); // State for selected party leader
+    const [timeLeft, setTimeLeft] = useState(60); // State for countdown timer
 
     useEffect(() => {
         socket.on("connect", () => {
@@ -44,10 +47,25 @@ const GameBoard = () => {
             console.log(`Disconnected from server`);
         });
 
+        socket.on("turn_start", () => {
+            setTimeLeft(60); // Reset the timer to 60 seconds at the start of each turn
+        });
+
         return () => {
             socket.disconnect();
         };
     }, []);
+
+    useEffect(() => {
+        if (timeLeft > 0) {
+            const timerId = setTimeout(() => {
+                setTimeLeft(timeLeft - 1);
+            }, 1000);
+            return () => clearTimeout(timerId);
+        } else {
+            socket.emit("end_turn"); // Automatically end the turn when the timer runs out
+        }
+    }, [timeLeft]);
 
     // Function to discard the entire hand
     const discardAllCards = () => {
@@ -83,73 +101,93 @@ const GameBoard = () => {
         });
     };
 
-    const choosePartyLeader = (card) => {
-        setPartyLeaderChosen
-        setPlayerLeader(card);
-    }
+    // Handle party leader selection
+    const handleLeaderSelect = (leader) => {
+        setSelectedLeader(leader);
+    };
 
     // Get the last discarded card (or null if the discard pile is empty)
     const lastDiscardedCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null;
 
     return (
-    <div className="game-board-container"> 
-        <div style={styles.gameBoard}>
-            <Timer />
-            <ActionPoints />
-            <DrawCard />
+        <div className="game-board-container">
+            {!selectedLeader ? (
+                <PartyLeaderSelection onLeaderSelect={handleLeaderSelect} />
+            ) : (
+                <div style={styles.gameBoard}>
+                    <Timer timeLeft={timeLeft} />
+                    <ActionPoints />
+                    <div style={styles.drawCardContainer}>
+                        <DrawCard />
+                    </div>
 
-            {/* Player's name in the top right corner */}
-            <div style={styles.playerName}>{playerName}</div>
-
-            {/* Play Area */}
-            <div style={styles.playArea}>
-                {playedCards.map((card, index) => (
-                    <div
-                        key={index}
-                        style={styles.slot}
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, index)}
-                    >
-                        {card ? (
-                            <div style={styles.card}>
-                                <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                    {/* Player's name and selected leader in the top right corner */}
+                    <div style={styles.playerInfo}>
+                        <div style={styles.playerName}>{playerName}</div>
+                        {selectedLeader && (
+                            <div style={styles.leader}>
+                                <img src={selectedLeader.image} alt={selectedLeader.name} style={styles.leaderImage} />
                             </div>
-                        ) : (
-                            <div style={styles.emptySlot}>Slot {index + 1}</div>
                         )}
                     </div>
-                ))}
-            </div>
 
-            {/* Player Hand */}
-            <h2>Player Hand</h2>
-            <div style={styles.hand}>
-                {playerHand.map((card) => (
-                    <div key={card.id} draggable onDragStart={(e) => handleDragStart(e, card)} style={styles.card}>
-                        <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                    {/* Opponent Play Area */}
+                    <div style={styles.opponentPlayArea}>
+                        {opponentPlayedCards.map((card, index) => (
+                            <OpponentCardSlot key={index} card={card} />
+                        ))}
                     </div>
-                ))}
-            </div>
 
-            {/* Discard Pile and Discard Button */}
-            <div style={styles.discardContainer}>
-                <div style={styles.discardPile}>
-                    {lastDiscardedCard ? (
-                        <div style={styles.card}>
-                            <img src={lastDiscardedCard.image} alt={`Card ${lastDiscardedCard.id}`} style={styles.cardImage} />
+                    {/* Play Area */}
+                    <div style={styles.playArea}>
+                        {playedCards.map((card, index) => (
+                            <div
+                                key={index}
+                                style={styles.slot}
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, index)}
+                            >
+                                {card ? (
+                                    <div style={styles.card}>
+                                        <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                                    </div>
+                                ) : (
+                                    <div style={styles.emptySlot}>Slot {index + 1}</div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Player Hand */}
+                    <h2>Player Hand</h2>
+                    <div style={styles.hand}>
+                        {playerHand.map((card) => (
+                            <div key={card.id} draggable onDragStart={(e) => handleDragStart(e, card)} style={styles.card}>
+                                <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Discard Pile and Discard Button */}
+                    <div style={styles.discardContainer}>
+                        <div style={styles.discardPile}>
+                            {lastDiscardedCard ? (
+                                <div style={styles.card}>
+                                    <img src={lastDiscardedCard.image} alt={`Card ${lastDiscardedCard.id}`} style={styles.cardImage} />
+                                </div>
+                            ) : (
+                                <div style={styles.slot}>
+                                    <div style={styles.emptySlot}>Discard Pile</div>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div style={styles.slot}>
-                            <div style={styles.emptySlot}>Discard Pile</div>
-                        </div>
-                    )}
+                        <button onClick={discardAllCards} style={styles.discardButton}>
+                            Discard
+                        </button>
+                    </div>
                 </div>
-                <button onClick={discardAllCards} style={styles.discardButton}>
-                    Discard
-                </button>
-            </div>
+            )}
         </div>
-      </div>  
     );
 };
 
@@ -160,41 +198,63 @@ const styles = {
     gameBoard: {
         position: "relative",
         textAlign: "center",
-        padding: "2vh",
-        border: "4px solid black",
+        padding: "1vh", // Reduce padding
+        border: "3px solid black", // Reduce border size
         background: "#162C24",
-        height: "100vh", // Use viewport height instead of fixed pixels
-        maxWidth: "1600px", // Add a max-width
+        height: "90vh", // Reduce height
+        maxWidth: "1400px", // Reduce max-width
         margin: "0 auto", // Center the game board
         display: "flex",
         flexDirection: "column",
     },
-    playerName: {
+    playerInfo: {
         position: "absolute",
-        top: "2vh",
-        right: "2vw",
+        top: "1vh", // Reduce top margin
+        right: "1vw", // Reduce right margin
         color: "#fff",
-        fontSize: "1.2rem",
+        textAlign: "right",
+    },
+    playerName: {
+        fontSize: "1rem", // Reduce font size
         fontWeight: "bold",
+    },
+    leader: {
+        marginTop: "0.5vh", // Reduce top margin
+    },
+    leaderImage: {
+        width: "80px", // Reduce size
+        height: "120px", // Reduce size
+    },
+    drawCardContainer: {
+        transform: "scale(0.7)", // Scale down the DrawCard component further
+        transformOrigin: "top left",
+    },
+    opponentPlayArea: {
+        display: "flex",
+        justifyContent: "center",
+        gap: "0.5vw", // Reduce gap
+        margin: "1vh 0", // Reduce margin
+        flexWrap: "wrap",
+        padding: "0 1vw", // Reduce padding
     },
     hand: {
         display: "flex",
         justifyContent: "center",
-        gap: "1vw",
+        gap: "0.5vw", // Reduce gap
         flexWrap: "wrap",
-        margin: "2vh 0",
-        padding: "0 2vw",
+        margin: "1vh 0", // Reduce margin
+        padding: "0 1vw", // Reduce padding
     },
     card: {
-        width: "calc(150px + 2vw)", // Responsive card width
-        height: "calc(200px + 2vh)", // Responsive card height
-        border: "2px solid #888",
-        borderRadius: "10px",
+        width: "calc(120px + 1vw)", // Reduce card width
+        height: "calc(160px + 1vh)", // Reduce card height
+        border: "1px solid #888", // Reduce border size
+        borderRadius: "8px", // Reduce border radius
         overflow: "hidden",
         cursor: "grab",
         flexShrink: 0,
-        maxWidth: "180px", // Add maximum width
-        maxHeight: "240px", // Add maximum height
+        maxWidth: "150px", // Reduce max width
+        maxHeight: "200px", // Reduce max height
     },
     cardImage: {
         width: "100%",
@@ -204,45 +264,45 @@ const styles = {
     playArea: {
         display: "flex",
         justifyContent: "center",
-        gap: "1vw",
-        margin: "2vh 0",
+        gap: "0.5vw", // Reduce gap
+        margin: "1vh 0", // Reduce margin
         flexWrap: "wrap",
-        padding: "0 2vw",
+        padding: "0 1vw", // Reduce padding
     },
     slot: {
-        width: "calc(150px + 2vw)", // Match card dimensions
-        height: "calc(200px + 2vh)",
-        border: "2px dashed #ccc",
-        borderRadius: "10px",
+        width: "calc(120px + 1vw)", // Reduce slot width
+        height: "calc(160px + 1vh)", // Reduce slot height
+        border: "1px dashed #ccc", // Reduce border size
+        borderRadius: "8px", // Reduce border radius
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#1E7149",
-        maxWidth: "180px",
-        maxHeight: "240px",
+        maxWidth: "150px", // Reduce max width
+        maxHeight: "200px", // Reduce max height
     },
     emptySlot: {
         color: "#888",
-        fontSize: "0.875rem",
+        fontSize: "0.75rem", // Reduce font size
     },
     discardContainer: {
         position: "absolute",
-        bottom: "2vh",
-        right: "2vw",
+        bottom: "1vh", // Reduce bottom margin
+        right: "1vw", // Reduce right margin
         textAlign: "center",
     },
     discardPile: {
-        marginBottom: "1vh",
+        marginBottom: "0.5vh", // Reduce bottom margin
     },
     discardButton: {
-        padding: "1vh 2vw",
-        fontSize: "1rem",
+        padding: "0.5vh 1vw", // Reduce padding
+        fontSize: "0.8rem", // Reduce font size
         cursor: "pointer",
         backgroundColor: "#4CAF50",
         color: "#fff",
         border: "none",
-        borderRadius: "5px",
-        minWidth: "100px",
+        borderRadius: "4px", // Reduce border radius
+        minWidth: "80px", // Reduce min width
     },
 };
 
@@ -250,22 +310,22 @@ const styles = {
 const mediaQueries = {
     '@media (max-width: 1200px)': {
         card: {
-            width: "calc(120px + 1vw)",
-            height: "calc(160px + 1vh)",
+            width: "calc(100px + 1vw)",
+            height: "calc(133px + 1vh)",
         },
         slot: {
-            width: "calc(120px + 1vw)",
-            height: "calc(160px + 1vh)",
+            width: "calc(100px + 1vw)",
+            height: "calc(133px + 1vh)",
         },
     },
     '@media (max-width: 768px)': {
         card: {
-            width: "calc(100px + 1vw)",
-            height: "calc(133px + 1vh)",
+            width: "calc(80px + 1vw)",
+            height: "calc(106px + 1vh)",
         },
         slot: {
-            width: "calc(100px + 1vw)",
-            height: "calc(133px + 1vh)",
+            width: "calc(80px + 1vw)",
+            height: "calc(106px + 1vh)",
         },
     },
 };
