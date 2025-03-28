@@ -14,6 +14,7 @@ import Bullseye from "../assets/Bullseye.png";
 import Hydra from "../assets/Hydra.png";
 import Cyborg20xx from "../assets/Cyborg 20xx.png";
 import Switcheroo from "../assets/Switcheroo.png";
+import MAD from "../assets/MAD.png";
 
 import dice1 from "../assets/dice1.png";
 import dice2 from "../assets/dice2.png";
@@ -30,11 +31,12 @@ const GameBoard = () => {
         { id: 3, image: DruidMask, type: "Item", affinity: "Druid" , min: 4, max: 10}, // Items and spells have no affinity
         { id: 4, image: DecoyDoll, type: "Item", affinity: null },
         { id: 5, image: CriticalBoost, type: "Spell", affinity: null },
-        { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" },
-        { id: 7, image: Bullseye, type: "Hero", affinity: "Consort" },
-        { id: 8, image: Hydra, type: "Hero", affinity: "Serpentine" },
+        { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" , min: 0, max: 8},
+        { id: 7, image: Bullseye, type: "Hero", affinity: "Consort" , min: 0, max: 4},
+        { id: 8, image: Hydra, type: "Hero", affinity: "Serpentine" , min: 0, max: 0},
         { id: 9, image: Cyborg20xx, type: "Hero", affinity: "Future", min: 5, max: 7},
-        { id: 10, image: Switcheroo, type: "Spell"}
+        { id: 10, image: Switcheroo, type: "Spell"},
+        { id: 11, image: MAD, type: "Spell"},
     ];
     // State Variables
 
@@ -71,9 +73,12 @@ const GameBoard = () => {
     const [swapSpellActive, setSwapSpellActive] = useState(false);
     const [selectedOwnHero, setSelectedOwnHero] = useState(null);
     const [selectedOpponentHero, setSelectedOpponentHero] = useState(null);
+    const [destroyMode, setDestroyMode] = useState(false);
+    const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
+    const hasHero = opponentPlayedCards.some(card => card && card.type === "Hero");
 
     const heroEffect = (card, slotIndex) => {
-        if (!card || (card.type !== "Hero" && card.type !== "Warrior")) return;
+        if (!card || (card.type !== "Hero")) return;
         
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
         const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
@@ -132,11 +137,23 @@ const GameBoard = () => {
                     };
                     setCurrentHand(prevHand => [...prevHand, randomCard]);
                 }
+                discardCard()
 
                 break;
             }
             case 10: { // Switcheroo
                 activateSwapSpell();
+                break;
+            }
+            case 11: {
+                if (hasHero) {
+                    discardCard();
+                    discardCard();
+                    activateDestroyMode();
+                }
+                else {
+                    return;
+                }
                 break;
             }
             default:
@@ -205,6 +222,25 @@ const GameBoard = () => {
             }
         }
     }
+    const discardCard = () => {
+
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+    
+        // Check if the current player's hand is empty
+        if (currentHand.length === 0) {
+            alert("No cards to discard!");
+            return;
+        }
+    
+        // Select a random card from the hand
+        const randomIndex = Math.floor(Math.random() * currentHand.length);
+        const cardToDiscard = currentHand[randomIndex];
+    
+        // Remove the card from hand and add to discard pile
+        setCurrentHand(prevHand => prevHand.filter((_, index) => index !== randomIndex));
+        setDiscardPile(prev => [...prev, cardToDiscard]);
+    };
     // Function to handle drawing a card
     const handleDrawCard = () => {
         if (!checkActionPoints()) return; // Check action points before proceeding
@@ -368,7 +404,56 @@ const GameBoard = () => {
             setSelectedOpponentHero(slotIndex);
         }
     };
+
+    const activateDestroyMode = () => {
+        if (!checkActionPoints()) return;
+        setDestroyMode(true);
+    };
+
+    const destroyOpponentHero = (slotIndex) => {
+        const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
+        const setOpponentPlayedCards = currentPlayer === 1 ? setPlayedCards2 : setPlayedCards1;
     
+        // Check if the selected slot has a hero card
+        if (!opponentPlayedCards[slotIndex] || opponentPlayedCards[slotIndex].type !== "Hero") {
+            alert("No Hero card in this slot to destroy!");
+            return;
+        }
+    
+        const heroCard = opponentPlayedCards[slotIndex];
+        
+        // Check if hero has a Decoy Doll equipped
+        const hasDecoyDoll = heroCard.items?.some(item => item.id === 4); // Decoy Doll has id 4
+    
+        if (hasDecoyDoll) {
+            // Remove the Decoy Doll instead of the hero
+            setOpponentPlayedCards(prev => {
+                const newPlayed = [...prev];
+                newPlayed[slotIndex] = {
+                    ...newPlayed[slotIndex],
+                    items: newPlayed[slotIndex].items.filter(item => item.id !== 4) // Remove Decoy Doll
+                };
+                return newPlayed;
+            });
+    
+            // Add Decoy Doll to discard pile
+            const decoyDoll = heroCard.items.find(item => item.id === 4);
+            setDiscardPile(prev => [...prev, decoyDoll]);
+            
+            alert("Decoy Doll was destroyed instead of the Hero!");
+        } else {
+            // Move the hero to discard pile
+            setDiscardPile(prev => [...prev, heroCard]);
+            
+            // Remove the hero from opponent's played cards
+            setOpponentPlayedCards(prev => {
+                const newPlayed = [...prev];
+                newPlayed[slotIndex] = null;
+                return newPlayed;
+            });
+        }
+        setDestroyMode(false);
+    };
     const swapItems = () => {
         if (selectedOwnHero === null || selectedOpponentHero === null) {
             alert("Please select both heroes to swap items!");
@@ -666,6 +751,38 @@ const GameBoard = () => {
                         >
                             Cancel
                         </button>
+                    </div>
+                )}
+                {/* Add this modal for selecting opponent hero to destroy */}
+                {destroyMode && (
+                    <div style={styles.destroyModal}>
+                        <h2>Select an opponent Hero to destroy</h2>
+                        <div style={styles.playArea}>
+                            {(currentPlayer === 1 ? playedCards2 : playedCards1).map((card, index) => (
+                                <div
+                                    key={`destroy-opponent-${index}`}
+                                    style={{
+                                        ...styles.slot,
+                                        border: '4px solid red',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => destroyOpponentHero(index)}
+                                >
+                                    {card && (
+                                        <div style={styles.card}>
+                                            <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                                            {card.items?.length > 0 && (
+                                                <div style={styles.items}>
+                                                    {card.items.map((item, itemIndex) => (
+                                                        <img key={`destroy-item-${itemIndex}`} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
         </div>
