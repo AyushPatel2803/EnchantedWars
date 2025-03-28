@@ -3,7 +3,6 @@ import Timer from "./Timer";
 import ActionPoints from "./ActionPoints";
 import DrawCard from "./DrawCard";
 import "./GameBoard.css";
-
 // Import Card Images
 import MooseDruid from "../assets/MooseDruid.png";
 import DarkGoblin from "../assets/DarkGoblin.png";
@@ -14,6 +13,7 @@ import LostSoul from "../assets/Lost Soul.png";
 import Bullseye from "../assets/Bullseye.png";
 import Hydra from "../assets/Hydra.png";
 import Cyborg20xx from "../assets/Cyborg 20xx.png";
+import Switcheroo from "../assets/Switcheroo.png";
 
 import dice1 from "../assets/dice1.png";
 import dice2 from "../assets/dice2.png";
@@ -25,17 +25,28 @@ import dice6 from "../assets/dice6.png";
 const GameBoard = () => {
     // Define your actual card data with types and affinities
     const cardList = [
-        { id: 1, image: MooseDruid, type: "Warrior", affinity: "Druid" }, // Moose Druid has Druid affinity
-        { id: 2, image: DarkGoblin, type: "Hero", affinity: "Dark" }, // Dark Goblin has Dark affinity
-        { id: 3, image: DruidMask, type: "Item", affinity: "Druid" }, // Items and spells have no affinity
+        { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid", min: 4, max: 10}, // Moose Druid has Druid affinity
+        { id: 2, image: DarkGoblin, type: "Hero", affinity: "Dark" , min: 0, max: 6}, // Dark Goblin has Dark affinity
+        { id: 3, image: DruidMask, type: "Item", affinity: "Druid" , min: 4, max: 10}, // Items and spells have no affinity
         { id: 4, image: DecoyDoll, type: "Item", affinity: null },
         { id: 5, image: CriticalBoost, type: "Spell", affinity: null },
         { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" },
         { id: 7, image: Bullseye, type: "Hero", affinity: "Consort" },
-        { id: 8, image: Hydra, type: "Hero", affinity: "Scalian" },
-        { id: 9, image: Cyborg20xx, type: "Warrior", affinity: "Future" },
+        { id: 8, image: Hydra, type: "Hero", affinity: "Serpentine" },
+        { id: 9, image: Cyborg20xx, type: "Hero", affinity: "Future", min: 5, max: 7},
+        { id: 10, image: Switcheroo, type: "Spell"}
     ];
+    // State Variables
 
+    const handleMouseEnter = (card, slotIndex) => {
+        if (card) {
+            setHoveredCard({ card, slotIndex });
+        }
+    };
+    
+    const handleMouseLeave = () => {
+        setHoveredCard(null);
+    };
     // Helper function to generate a random hand of 5 cards
     const generateHand = () => {
         let hand = [];
@@ -45,63 +56,7 @@ const GameBoard = () => {
         }
         return hand;
     };
-    const heroEffect = () => {
-        
-    }
-    const castSpell = () => {
-        if (!spellSlot) return;
-        
-        const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
-        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
-        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
-        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
-
-        if (currentActionPoints < 1) {
-            alert("Not enough action points to cast spell!");
-            return;
-        }
-        // Perform spell effect based on spell type
-        performSpellEffect(spellSlot);
-        // Remove spell from hand
-        setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellSlot.uniqueId));
-        // Add to discard pile
-        setDiscardPile(prev => [...prev, spellSlot]);
-        // Clear spell slot
-        setSpellSlot(null);
-        setSpellCastDisabled(true);
-        // Deduct action point
-        setCurrentActionPoints(prev => prev - 1);
-
-        if (currentActionPoints - 1 === 0) {
-            switchTurn();
-        }
-    }
-    const performSpellEffect = (spell) => {
-        // Implement different effects based on spell
-        switch(spell.id) {
-            case 5: // Critical Boost
-                alert("Critical Boost spell cast! All heroes gain +1 power this turn.");
-                break;
-            // Add more cases for other spells
-            default:
-                alert(`${spell.name} spell cast!`);
-        }
-    };
-    const handleSpellSlotDrop = (e) => {
-        e.preventDefault();
-        const isSpell = e.dataTransfer.getData("isSpell") === "true";
-        
-        if (!isSpell) {
-            alert("Only spell cards can be placed in the spell slot!");
-            return;
-        }
-
-        const card = JSON.parse(e.dataTransfer.getData("card"));
-        setSpellSlot(card);
-        setSpellCastDisabled(false);
-    };
-
-    // State variables
+    //State Variables
     const [player1Hand, setPlayer1Hand] = useState(generateHand());
     const [player2Hand, setPlayer2Hand] = useState(generateHand());
     const [playedCards1, setPlayedCards1] = useState(Array(5).fill(null)); // 5 slots for player 1
@@ -110,9 +65,96 @@ const GameBoard = () => {
     const [player1ActionPoints, setPlayer1ActionPoints] = useState(3); // Initial action points for player 1
     const [player2ActionPoints, setPlayer2ActionPoints] = useState(3); // Initial action points for player 2 (fixed typo)
     const [currentPlayer, setCurrentPlayer] = useState(1); // Initial player turn
-    const [spellSlot, setSpellSlot] = useState(null);
-    const [spellCastDisabled, setSpellCastDisabled] = useState(true);
+    const [hoveredCard, setHoveredCard] = useState(null);
+    const [diceRolls, setDiceRolls] = useState({ first: null, second: null });
+    const [hoveredSpell, setHoveredSpell] = useState(null);
+    const [swapSpellActive, setSwapSpellActive] = useState(false);
+    const [selectedOwnHero, setSelectedOwnHero] = useState(null);
+    const [selectedOpponentHero, setSelectedOpponentHero] = useState(null);
 
+    const heroEffect = (card, slotIndex) => {
+        if (!card || (card.type !== "Hero" && card.type !== "Warrior")) return;
+        
+        const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+        
+        // Perform hero-specific effect
+        performHeroEffect(card, slotIndex);
+
+        setCurrentActionPoints(prev => prev - 1);
+        
+        if (currentActionPoints - 1 === 0) {
+            switchTurn();
+        }
+    };
+    
+    const performHeroEffect = (card, slotIndex) => {
+        const roll1 = Math.floor(Math.random() * 6) + 1;
+        const roll2 = Math.floor(Math.random() * 6) + 1;
+        
+        setDiceRolls({ first: roll1, second: roll2 });
+        
+        // Calculate total roll
+        const totalRoll = roll1 + roll2;
+        
+        // Check if roll is within card's min/max range (if defined)
+        if (card.min !== undefined && card.max !== undefined) {
+            if (totalRoll < card.min) {
+                alert(`${card.type} ${card.id} rolled ${totalRoll} (${roll1}+${roll2}) - Below minimum power!`);
+            } else if (totalRoll > card.max) {
+                alert(`${card.type} ${card.id} rolled ${totalRoll} (${roll1}+${roll2}) - Above maximum power!`);
+            } else {
+                alert(`${card.type} ${card.id} rolled ${totalRoll} (${roll1}+${roll2}) - Within power range!`);
+            }
+        } else {
+            alert(`${card.type} ${card.id} rolled ${totalRoll} (${roll1}+${roll2})`);
+        }
+    };
+    const castSpell = (spellCard) => {
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+    
+        // Handle different spell effects directly
+        switch(spellCard.id) {
+            case 5: { // Critical Boost
+                // Check if player has room for 3 more cards
+                if (currentHand.length + 3 > 8) {
+                    alert("Critical Boost failed! Your hand would exceed 8 cards.");
+                    return;
+                }
+                
+                // Draw 3 cards without consuming action points
+                for (let i = 0; i < 3; i++) {
+                    const randomCard = { 
+                        ...cardList[Math.floor(Math.random() * cardList.length)], 
+                        uniqueId: Date.now() + i 
+                    };
+                    setCurrentHand(prevHand => [...prevHand, randomCard]);
+                }
+
+                break;
+            }
+            case 10: { // Switcheroo
+                activateSwapSpell();
+                break;
+            }
+            default:
+                alert(`${spellCard.name} spell cast!`);
+        }
+        
+        // Remove the spell from hand and add to discard pile
+        setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellCard.uniqueId));
+        setDiscardPile(prev => [...prev, spellCard]);
+        
+        // Deduct action point for non-Critical Boost spells
+        setCurrentActionPoints(prev => prev - 1);
+            
+        if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
+            switchTurn();
+        }
+    };
+    
     // Function to check action points and switch turn if necessary
     function checkActionPoints () {
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
@@ -125,25 +167,32 @@ const GameBoard = () => {
 
     let intervalId = setInterval(checkWinCondition, 200);
 
-    function checkWinCondition () {
+    function checkWinCondition() {
         const checkPlayerWin = (playedCards) => {
-            if (playedCards.every((card) => card && (card.type === "Hero" || card.type === "Warrior"))) {
-                const affinities = playedCards.map((card) => card.affinity);
-                const uniqueAffinities = new Set(affinities);
+            if (playedCards.every((card) => card && (card.type === "Hero"))) {
+                const affinities = playedCards.map((card) => {
+                    // Check if the card has an equipped item with a different affinity
+                    if (card.items && card.items.length > 0 && card.items[0].affinity) {
+                        return card.items[0].affinity; // Use item's affinity if it exists
+                    }
+                    return card.affinity; // Otherwise use hero's affinity
+                });
                 clearInterval(intervalId);
-                return uniqueAffinities.size === 5; // Check if all affinities are unique            
+                const uniqueAffinities = new Set(affinities);
+                return uniqueAffinities.size === 5; // Check if all affinities are unique
             }
             else {
                 return false;
             }
         };
+    
         if (checkPlayerWin(playedCards1)) {
             const playAgain = window.confirm("Player 1 wins! Do you want to play again?");
             if (playAgain) {
                 window.location.href = "/local-game";
             } 
             else {
-                window.location.href = "/"; // Navigate to MainPage.jsx
+                window.location.href = "/";
             }
         } 
         else if (checkPlayerWin(playedCards2)) {
@@ -152,10 +201,10 @@ const GameBoard = () => {
                 window.location.href = "/local-game";
             } 
             else {
-                window.location.href = "/"; // Navigate to MainPage.jsx
+                window.location.href = "/";
             }
         }
-    };
+    }
     // Function to handle drawing a card
     const handleDrawCard = () => {
         if (!checkActionPoints()) return; // Check action points before proceeding
@@ -219,9 +268,10 @@ const GameBoard = () => {
     
     // Drag-and-drop handlers
     const handleDragStart = (e, card) => {
-        e.dataTransfer.setData("card", JSON.stringify(card));
-        e.dataTransfer.setData("isSpell", card.type === "Spell");
-    
+        if (card.type !== "Spell") { // Only allow dragging non-spell cards
+            e.dataTransfer.setData("card", JSON.stringify(card));
+            e.dataTransfer.setData("isSpell", card.type === "Spell");
+        }
     };
 
     const handleDragOver = (e) => {
@@ -229,9 +279,8 @@ const GameBoard = () => {
     };
 
     const handleDrop = (e, slotIndex) => {
-
         e.preventDefault();
-
+    
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
         const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
         const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2; 
@@ -239,44 +288,45 @@ const GameBoard = () => {
         const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
         const setCurrentPlayedCards = currentPlayer === 1 ? setPlayedCards1 : setPlayedCards2;
         
-        const card = JSON.parse(e.dataTransfer.getData("card")); // Retrieve the card data
+        const card = JSON.parse(e.dataTransfer.getData("card"));
         
-        // Track the action points before attempting the play
-        const initialActionPoints = currentActionPoints;
-        
+        if (card.type !== "Item" && currentPlayedCards[slotIndex] !== null) {
+            return;
+        }
         // Determine if the slot is accessible by the current player
         if ((currentPlayer === 1 && slotIndex >= 0 && slotIndex < 5) || (currentPlayer === 2 && slotIndex >= 0 && slotIndex < 5)) {
-            // Ensure only hero cards or item cards can be placed
-            if ((card.type === "Hero" || (card.type === "Item" && currentPlayedCards[slotIndex]?.type === "Hero")) || (card.type === "Warrior" || (card.type === "Item" && currentPlayedCards[slotIndex]?.type === "Warrior"))) {
-                setCurrentPlayedCards((prevPlayed) => {
-                    const newPlayed = [...prevPlayed];
-        
-                    if (card.type === "Hero" || card.type === "Warrior") {
-                        newPlayed[slotIndex] = { ...card, items: [] }; // Place the hero card in the specified slot with an empty items array
-                    } else if (card.type === "Item" && (newPlayed[slotIndex]?.type === "Hero" || newPlayed[slotIndex]?.type === "Warrior")) {
-                        // Check if the hero card already has an item attached
-                        if (newPlayed[slotIndex].items.length < 1) {
-                            newPlayed[slotIndex].items.push(card); // Attach the item to the hero card
-                        } else {
-                            alert("The hero card already has an item attached!");
-                            return prevPlayed; // No need to update action points or hand as play is unsuccessful
-                        }
-                    } else {
-                        alert("You can only place hero cards or attach items to hero cards!");
-                        return prevPlayed; // No need to update action points or hand as play is unsuccessful
-                    }
-                    return newPlayed;
-                });
-        
-                // If the play was successful, update the hand and action points
-                if (initialActionPoints === currentActionPoints) {
-                    setCurrentHand((prevHand) => prevHand.filter((c) => c.uniqueId !== card.uniqueId));
-                    setCurrentActionPoints((prev) => prev - 1);
-                    // Check if the action points are zero to switch turn
-                    if (currentActionPoints - 1 === 0) {
-                        switchTurn();
-                    }
+            // Check for invalid placements first
+            if (card.type === "Item") {
+                const targetCard = currentPlayedCards[slotIndex];
+                if (!targetCard || (targetCard.type !== "Hero")) {
+                    return;
                 }
+                if (targetCard.items?.length >= 1) {
+                    return;
+                }
+            }
+    
+            // If we get here, the placement is valid
+            setCurrentPlayedCards((prevPlayed) => {
+                const newPlayed = [...prevPlayed];
+                if (card.type === "Hero") {
+                    newPlayed[slotIndex] = { ...card, items: [] };
+                } else if (card.type === "Item") {
+                    const updatedCard = { ...newPlayed[slotIndex] };
+                    updatedCard.items = [...(updatedCard.items || []), card];
+                    newPlayed[slotIndex] = updatedCard;
+                }
+                
+                return newPlayed;
+            });
+    
+            // Only update hand and action points if we actually placed a card
+            setCurrentHand((prevHand) => prevHand.filter((c) => c.uniqueId !== card.uniqueId));
+            setCurrentActionPoints((prev) => prev - 1);
+            
+            // Check if the action points are zero to switch turn
+            if (currentActionPoints - 1 === 0) {
+                switchTurn();
             }
         }
     };
@@ -289,6 +339,85 @@ const GameBoard = () => {
         setPlayer2ActionPoints(3);
     };
 
+    const activateSwapSpell = () => {
+        setSwapSpellActive(true);
+        setSelectedOwnHero(null);
+        setSelectedOpponentHero(null);
+    };
+    
+    const cancelSwapSpell = () => {
+        setSwapSpellActive(false);
+        setSelectedOwnHero(null);
+        setSelectedOpponentHero(null);
+    };
+    
+    const selectOwnHero = (slotIndex) => {
+        const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
+        const card = currentPlayedCards[slotIndex];
+        
+        if (card && card.type === "Hero" && card.items?.length > 0) {
+            setSelectedOwnHero(slotIndex);
+        }
+    };
+    
+    const selectOpponentHero = (slotIndex) => {
+        const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
+        const card = opponentPlayedCards[slotIndex];
+        
+        if (card && card.type === "Hero" && card.items?.length > 0) {
+            setSelectedOpponentHero(slotIndex);
+        }
+    };
+    
+    const swapItems = () => {
+        if (selectedOwnHero === null || selectedOpponentHero === null) {
+            alert("Please select both heroes to swap items!");
+            return;
+        }
+    
+        const setCurrentPlayedCards = currentPlayer === 1 ? setPlayedCards1 : setPlayedCards2;
+        const setOpponentPlayedCards = currentPlayer === 1 ? setPlayedCards2 : setPlayedCards1;
+        
+        setCurrentPlayedCards(prev => {
+            const newPlayed = [...prev];
+            const opponentItems = [...(playedCards2[selectedOpponentHero]?.items || [])];
+            
+            if (newPlayed[selectedOwnHero]) {
+                newPlayed[selectedOwnHero] = {
+                    ...newPlayed[selectedOwnHero],
+                    items: opponentItems
+                };
+            }
+            return newPlayed;
+        });
+    
+        setOpponentPlayedCards(prev => {
+            const newPlayed = [...prev];
+            const ownItems = [...(playedCards1[selectedOwnHero]?.items || [])];
+            
+            if (newPlayed[selectedOpponentHero]) {
+                newPlayed[selectedOpponentHero] = {
+                    ...newPlayed[selectedOpponentHero],
+                    items: ownItems
+                };
+            }
+            return newPlayed;
+        });
+    
+        // Reset after swap
+        setSwapSpellActive(false);
+        setSelectedOwnHero(null);
+        setSelectedOpponentHero(null);
+        
+        // Deduct action point
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+        setCurrentActionPoints(prev => prev - 1);
+        
+        if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
+            switchTurn();
+        }
+    };
+
     // Get the last discarded card (or null if the discard pile is empty)
     const lastDiscardedCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null;
 
@@ -297,101 +426,111 @@ const GameBoard = () => {
             <Timer />
             <ActionPoints points={currentPlayer === 1 ? player1ActionPoints : player2ActionPoints} />
             <DrawCard onClick={handleDrawCard} />
-
+    
             {/* Player 2 Card Slots */}
             <div style={styles.playArea}>
                 {playedCards2.map((card, index) => (
                     <div
-                        key={index}
+                        key={`player2-${index}`}
                         style={styles.slot}
                         onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, index)}
+                        onDrop={(e) => currentPlayer === 2 && handleDrop(e, index)}
+                        onMouseEnter={() => currentPlayer === 2 && handleMouseEnter(card, index)}
+                        onMouseLeave={currentPlayer === 2 ? handleMouseLeave : undefined}
                     >
                         {card ? (
                             <div style={styles.card}>
                                 <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
-                                {/* Display attached items if any */}
                                 {card.items && card.items.length > 0 && (
                                     <div style={styles.items}>
-                                    {card.items.map((item, itemIndex) => (
-                                        <img key={itemIndex} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
-                                    ))}
-                                </div>
+                                        {card.items.map((item, itemIndex) => (
+                                            <img key={`player2-item-${itemIndex}`} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
+                                        ))}
+                                    </div>
+                                )}
+                                {card.type === "Hero" && hoveredCard?.slotIndex === index && currentPlayer === 2 && (
+                                    <div style={styles.heroEffectContainer}>
+                                        <button 
+                                            onClick={() => heroEffect(card, index)} 
+                                            style={styles.heroEffectButton}
+                                        >
+                                            Hero Roll
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         ) : (
                             <div style={styles.emptySlot}>Slot {index + 1}</div>
                         )}
-                        
                     </div>
                 ))}
             </div>
+    
             {/* Player 1 Card Slots */}
             <div style={styles.playArea}>
                 {playedCards1.map((card, index) => (
                     <div
-                        key={index}
+                        key={`player1-${index}`}
                         style={styles.slot}
                         onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, index)}
+                        onDrop={(e) => currentPlayer === 1 && handleDrop(e, index)}
+                        onMouseEnter={() => currentPlayer === 1 && handleMouseEnter(card, index)}
+                        onMouseLeave={currentPlayer === 1 ? handleMouseLeave : undefined}
                     >
                         {card ? (
                             <div style={styles.card}>
                                 <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
-                                {/* Display attached items if any */}
                                 {card.items && card.items.length > 0 && (
                                     <div style={styles.items}>
-                                    {card.items.map((item, itemIndex) => (
-                                        <img key={itemIndex} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
-                                    ))}
-                                </div>
+                                        {card.items.map((item, itemIndex) => (
+                                            <img key={`player1-item-${itemIndex}`} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
+                                        ))}
+                                    </div>
+                                )}
+                                {card.type === "Hero" && hoveredCard?.slotIndex === index && currentPlayer === 1 && (
+                                    <div style={styles.heroEffectContainer}>
+                                        <button 
+                                            onClick={() => heroEffect(card, index)} 
+                                            style={styles.heroEffectButton}
+                                        >
+                                            Hero Roll
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         ) : (
                             <div style={styles.emptySlot}>Slot {index + 1}</div>
                         )}
-                        
                     </div>
                 ))}
             </div>
-
-            {/* Player Hands */}
+            {/* Player Hand */}
             <h2>Player {currentPlayer} Hand</h2>
-            <div style={styles.hand}>
-                {(currentPlayer === 1 ? player1Hand : player2Hand).map((card) => (
-                    <div key={card.uniqueId} draggable onDragStart={(e) => handleDragStart(e, card)} style={styles.card}>
-                        <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
-                    </div>
-                ))}
-            </div>
-
-            <div style={styles.spellContainer}>
-                {/* Spell Slot */}
-                <div 
-                    style={styles.spellSlot}
-                    onDragOver={handleDragOver}
-                    onDrop={handleSpellSlotDrop}
-                >
-                    {spellSlot ? (
-                        <div style={styles.card}>
-                            <img src={spellSlot.image} alt={`Spell ${spellSlot.id}`} style={styles.cardImage} />
+                <div style={styles.hand}>
+                    {(currentPlayer === 1 ? player1Hand : player2Hand).map((card) => (
+                        <div 
+                            key={`hand-${card.uniqueId}`}
+                            draggable 
+                            onDragStart={(e) => handleDragStart(e, card)} 
+                            style={styles.card}
+                            onMouseEnter={() => card.type === "Spell" && setHoveredSpell(card)}
+                            onMouseLeave={() => card.type === "Spell" && setHoveredSpell(null)}
+                        >
+                            <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                            {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
+                                <div style={styles.spellEffectContainer}>
+                                    <button 
+                                        onClick={() => castSpell(card)} 
+                                        style={styles.spellEffectButton}
+                                    >
+                                        Cast Spell
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div style={styles.emptySlot}>Spell Slot</div>
-                    )}
+                    ))}
                 </div>
-                
-                {/* Cast Spell Button - now outside the slot div */}
-                <button 
-                    onClick={castSpell} 
-                    style={styles.spellButton}
-                    disabled={spellCastDisabled}
-                >
-                    Cast Spell 
-                </button>
-            </div>
-
-            {/* Discard Pile and Discard Button - remains the same */}
+            {/* Discard Pile and Discard Button */}
             <div style={styles.discardContainer}>
                 <div style={styles.discardPile}>
                     {lastDiscardedCard ? (
@@ -408,7 +547,129 @@ const GameBoard = () => {
                     Discard Deck
                 </button>
             </div>
+            <div style={styles.diceContainer}>
+                <div style={styles.dice}>
+                    {diceRolls.first ? (
+                        <img 
+                            src={
+                                diceRolls.first === 1 ? dice1 :
+                                diceRolls.first === 2 ? dice2 :
+                                diceRolls.first === 3 ? dice3 :
+                                diceRolls.first === 4 ? dice4 :
+                                diceRolls.first === 5 ? dice5 : dice6
+                            } 
+                            alt={`Dice ${diceRolls.first}`} 
+                            style={styles.diceImage}
+                        />
+                    ) : (
+                        <div style={styles.emptyDice}>?</div>
+                    )}
+                </div>
+                <div style={styles.dice}>
+                    {diceRolls.second ? (
+                        <img 
+                            src={
+                                diceRolls.second === 1 ? dice1 :
+                                diceRolls.second === 2 ? dice2 :
+                                diceRolls.second === 3 ? dice3 :
+                                diceRolls.second === 4 ? dice4 :
+                                diceRolls.second === 5 ? dice5 : dice6
+                            } 
+                            alt={`Dice ${diceRolls.second}`} 
+                            style={styles.diceImage}
+                        />
+                    ) : (
+                        <div style={styles.emptyDice}>?</div>
+                    )}
+                </div>
+            </div>
+            {/* Add this near your other UI elements */}
+                {swapSpellActive && (
+                    <div style={{ 
+                        position: 'fixed', 
+                        top: 0, 
+                        left: 0, 
+                        right: 0, 
+                        bottom: 0, 
+                        backgroundColor: 'rgba(0,0,0,0.7)', 
+                        zIndex: 99,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white'
+                    }}>
+                        <h2>Select your hero with an item</h2>
+                        <div style={styles.playArea}>
+                            {(currentPlayer === 1 ? playedCards1 : playedCards2).map((card, index) => (
+                                <div
+                                    key={`select-own-${index}`}
+                                    style={{
+                                        ...styles.slot,
+                                        border: selectedOwnHero === index ? '4px solid yellow' : '2px dashed #ccc'
+                                    }}
+                                    onClick={() => selectOwnHero(index)}
+                                >
+                                    {card && (
+                                        <div style={styles.card}>
+                                            <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                                            {card.items?.length > 0 && (
+                                                <div style={styles.items}>
+                                                    {card.items.map((item, itemIndex) => (
+                                                        <img key={`select-item-${itemIndex}`} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <h2>Select opponent's hero with an item</h2>
+                        <div style={styles.playArea}>
+                            {(currentPlayer === 1 ? playedCards2 : playedCards1).map((card, index) => (
+                                <div
+                                    key={`select-opponent-${index}`}
+                                    style={{
+                                        ...styles.slot,
+                                        border: selectedOpponentHero === index ? '4px solid yellow' : '2px dashed #ccc'
+                                    }}
+                                    onClick={() => selectOpponentHero(index)}
+                                >
+                                    {card && (
+                                        <div style={styles.card}>
+                                            <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                                            {card.items?.length > 0 && (
+                                                <div style={styles.items}>
+                                                    {card.items.map((item, itemIndex) => (
+                                                        <img key={`select-opponent-item-${itemIndex}`} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <button 
+                            onClick={swapItems} 
+                            disabled={selectedOwnHero === null || selectedOpponentHero === null}
+                            style={styles.spellEffectButton}
+                        >
+                            Swap Items
+                        </button>
+                        <button 
+                            onClick={cancelSwapSpell} 
+                            style={styles.cancelButton}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                )}
         </div>
+        
     );
 };
 
@@ -474,26 +735,6 @@ const styles = {
         color: "#888",
         fontSize: "14px",
     },
-    spellContainer: {
-        position: "absolute",
-        bottom: "320px", // Position above discard pile
-        right: "20px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "10px",
-    },
-    // Updated spell slot style
-    spellSlot: {
-        width: "150px",
-        height: "200px",
-        border: "2px dashed #ccc",
-        borderRadius: "10px",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#1E7149",
-    },
     // Updated spell button style
     spellButton: {
         padding: "8px 16px",
@@ -538,6 +779,84 @@ const styles = {
         height: "100%",
         objectFit: "cover",
     },
+    heroEffectContainer: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: '10px',
+        borderRadius: '8px',
+    },
+    heroEffectButton: {
+        padding: '8px 16px',
+        fontSize: '14px',
+        cursor: 'pointer',
+        backgroundColor: '#5FAF50',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '5px',
+        whiteSpace: 'nowrap',
+    },
+    diceContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '10px',
+        margin: '10px 0',
+    },
+    dice: {
+        width: '50px',
+        height: '50px',
+        border: '2px solid #888',
+        borderRadius: '10px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+    },
+    diceImage: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
+    },
+    emptyDice: {
+        color: '#888',
+        fontSize: '20px',
+        fontWeight: 'bold',
+    },
+    spellEffectContainer: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        padding: '10px',
+        borderRadius: '8px',
+    },
+    spellEffectButton: {
+        padding: '8px 16px',
+        fontSize: '14px',
+        cursor: 'pointer',
+        backgroundColor: '#9C27B0',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '5px',
+        whiteSpace: 'nowrap',
+    },
+    cancelButton: {
+        position: 'absolute',
+        bottom: '120px',
+        right: '20px',
+        padding: '10px 20px',
+        backgroundColor: '#ff4444',
+        color: 'white',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        zIndex: 100
+      }
 };
 
 export default GameBoard
