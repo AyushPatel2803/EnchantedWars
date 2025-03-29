@@ -31,7 +31,7 @@ const GameBoard = () => {
         { id: 3, image: DruidMask, type: "Item", affinity: "Druid" , min: 4, max: 10}, // Items and spells have no affinity
         { id: 4, image: DecoyDoll, type: "Item", affinity: null },
         { id: 5, image: CriticalBoost, type: "Spell", affinity: null },
-        { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" , min: 0, max: 8},
+        { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" , min: 0, max: 6},
         { id: 7, image: Bullseye, type: "Hero", affinity: "Consort" , min: 0, max: 4},
         { id: 8, image: Hydra, type: "Hero", affinity: "Serpentine" , min: 0, max: 0},
         { id: 9, image: Cyborg20xx, type: "Hero", affinity: "Future", min: 5, max: 7},
@@ -39,7 +39,6 @@ const GameBoard = () => {
         { id: 11, image: MAD, type: "Spell"},
     ];
     // State Variables
-
     const handleMouseEnter = (card, slotIndex) => {
         if (card) {
             setHoveredCard({ card, slotIndex });
@@ -82,18 +81,10 @@ const GameBoard = () => {
         
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
         const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+        const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
+        const setCurrentPlayedCards = currentPlayer === 1 ? setPlayedCards1 : setPlayedCards2;
         
         // Perform hero-specific effect
-        performHeroEffect(card, slotIndex);
-
-        setCurrentActionPoints(prev => prev - 1);
-        
-        if (currentActionPoints - 1 === 0) {
-            switchTurn();
-        }
-    };
-    
-    const performHeroEffect = (card, slotIndex) => {
         const roll1 = Math.floor(Math.random() * 6) + 1;
         const roll2 = Math.floor(Math.random() * 6) + 1;
         
@@ -102,17 +93,53 @@ const GameBoard = () => {
         // Calculate total roll
         const totalRoll = roll1 + roll2;
         
-        // Check if roll is within card's min/max range (if defined)
-        if (card.min !== undefined && card.max !== undefined) {
-            if (totalRoll < card.min) {
-                alert(`${card.type} ${card.id} rolled ${totalRoll} (${roll1}+${roll2}) - Below minimum power!`);
-            } else if (totalRoll > card.max) {
-                alert(`${card.type} ${card.id} rolled ${totalRoll} (${roll1}+${roll2}) - Above maximum power!`);
-            } else {
-                alert(`${card.type} ${card.id} rolled ${totalRoll} (${roll1}+${roll2}) - Within power range!`);
-            }
-        } else {
-            alert(`${card.type} ${card.id} rolled ${totalRoll} (${roll1}+${roll2})`);
+        switch(card.id) {
+            case 1: // Moose Druid
+                if (totalRoll >= card.max) {
+                    activateDestroyMode();
+                    return;
+                }
+                else if (totalRoll <= card.min) {
+                    // Self-destruct this hero
+                    setDiscardPile(prev => [...prev, card]);
+                    setCurrentPlayedCards(prev => {
+                        const newPlayed = [...prev];
+                        newPlayed[slotIndex] = null;
+                        return newPlayed;
+                    });
+                }
+                else {
+                    alert(`${totalRoll} - Normal roll`);
+                }
+                break;
+            case 6:
+                if (totalRoll >= card.max) {
+                    drawFromDiscard()
+                }
+                break;
+            case 9: // Cyborg 20xx
+                if (totalRoll >= card.max) {
+                    activateDestroyMode();
+                    return;
+                }
+                else if (totalRoll <= card.min) {
+                    discardCard();
+                    discardCard();
+                    alert("Critical failure! Discarded 2 cards.");
+                }
+                else {
+                    alert(`${totalRoll} - Normal roll`);
+                }
+                break;
+            default:
+                alert(`${totalRoll} - Normal roll`);
+                break;
+        }
+        
+        setCurrentActionPoints(prev => prev - 1);
+    
+        if (currentActionPoints - 1 === 0) {
+            switchTurn();
         }
     };
     const castSpell = (spellCard) => {
@@ -150,6 +177,7 @@ const GameBoard = () => {
                     discardCard();
                     discardCard();
                     activateDestroyMode();
+                    return;
                 }
                 else {
                     return;
@@ -173,7 +201,9 @@ const GameBoard = () => {
     };
     
     // Function to check action points and switch turn if necessary
-    function checkActionPoints () {
+    function checkActionPoints() {
+        if (destroyMode) return true; // Skip turn switching while in destroy mode
+        
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
         if (currentActionPoints <= 0) {
             switchTurn();
@@ -190,11 +220,11 @@ const GameBoard = () => {
                 const affinities = playedCards.map((card) => {
                     // Check if the card has an equipped item with a different affinity
                     if (card.items && card.items.length > 0 && card.items[0].affinity) {
+                        clearInterval(intervalId);
                         return card.items[0].affinity; // Use item's affinity if it exists
                     }
                     return card.affinity; // Otherwise use hero's affinity
                 });
-                clearInterval(intervalId);
                 const uniqueAffinities = new Set(affinities);
                 return uniqueAffinities.size === 5; // Check if all affinities are unique
             }
@@ -406,13 +436,18 @@ const GameBoard = () => {
     };
 
     const activateDestroyMode = () => {
-        if (!checkActionPoints()) return;
+        if (!hasHero) {
+            alert("Opponent has no Hero cards to destroy!");
+            return;
+        }
         setDestroyMode(true);
     };
 
     const destroyOpponentHero = (slotIndex) => {
         const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
         const setOpponentPlayedCards = currentPlayer === 1 ? setPlayedCards2 : setPlayedCards1;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+        const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
     
         // Check if the selected slot has a hero card
         if (!opponentPlayedCards[slotIndex] || opponentPlayedCards[slotIndex].type !== "Hero") {
@@ -423,7 +458,7 @@ const GameBoard = () => {
         const heroCard = opponentPlayedCards[slotIndex];
         
         // Check if hero has a Decoy Doll equipped
-        const hasDecoyDoll = heroCard.items?.some(item => item.id === 4); // Decoy Doll has id 4
+        const hasDecoyDoll = heroCard.items?.some(item => item.id === 4);
     
         if (hasDecoyDoll) {
             // Remove the Decoy Doll instead of the hero
@@ -431,7 +466,7 @@ const GameBoard = () => {
                 const newPlayed = [...prev];
                 newPlayed[slotIndex] = {
                     ...newPlayed[slotIndex],
-                    items: newPlayed[slotIndex].items.filter(item => item.id !== 4) // Remove Decoy Doll
+                    items: newPlayed[slotIndex].items.filter(item => item.id !== 4)
                 };
                 return newPlayed;
             });
@@ -452,7 +487,47 @@ const GameBoard = () => {
                 return newPlayed;
             });
         }
+        
+        // Deduct action point only after successful destruction
+        setCurrentActionPoints(prev => prev - 1);
+        
         setDestroyMode(false);
+        
+        // Check if this was the last action point
+        if (currentActionPoints - 1 <= 0) {
+            switchTurn();
+        }
+    };
+    const drawFromDiscard = () => {
+        
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+    
+        // Check if discard pile is empty
+        if (discardPile.length === 0) {
+            alert("Discard pile is empty!");
+            return;
+        }
+    
+        // Check if hand is full
+        if (currentHand.length >= 8) {
+            alert("Your hand is full (max 8 cards)!");
+            return;
+        }
+    
+        // Get last discarded card
+        const lastDiscarded = discardPile[discardPile.length - 1];
+        
+        // Add to player's hand with new unique ID
+        const drawnCard = {
+            ...lastDiscarded,
+            uniqueId: Date.now() // Assign new unique ID
+        };
+    
+        // Update state
+        setCurrentHand(prev => [...prev, drawnCard]);
+        setDiscardPile(prev => prev.slice(0, -1)); // Remove from discard pile
+
     };
     const swapItems = () => {
         if (selectedOwnHero === null || selectedOpponentHero === null) {
