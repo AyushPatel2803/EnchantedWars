@@ -73,6 +73,8 @@ const GameBoard = () => {
     const [selectedOwnHero, setSelectedOwnHero] = useState(null);
     const [selectedOpponentHero, setSelectedOpponentHero] = useState(null);
     const [destroyMode, setDestroyMode] = useState(false);
+    const [selectingFromDeck, setSelectingFromDeck] = useState(false);
+    const [topCards, setTopCards] = useState([]);
     const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
     const hasHero = opponentPlayedCards.some(card => card && card.type === "Hero");
 
@@ -129,6 +131,12 @@ const GameBoard = () => {
             case 6:
                 if (totalRoll >= card.max) {
                     drawFromDiscard()
+                }
+                break;
+            case 7:
+                if (totalRoll >= card.max) {
+                    drawFromTopThree()
+                    return;
                 }
                 break;
             case 9: // Cyborg 20xx
@@ -310,7 +318,47 @@ const GameBoard = () => {
             switchTurn();
         }
     };
-
+    const drawFromTopThree = () => {
+        // Generate 3 random cards to represent the top of the deck
+        const newTopCards = [];
+        for (let i = 0; i < 3; i++) {
+            const randomCard = { 
+                ...cardList[Math.floor(Math.random() * cardList.length)], 
+                uniqueId: Date.now() + i 
+            };
+            newTopCards.push(randomCard);
+        }
+        
+        setTopCards(newTopCards);
+        setSelectingFromDeck(true);
+    };
+    
+    const selectCardFromTopThree = (selectedCard) => {
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+    
+        // Check if hand is full
+        if (currentHand.length >= 8) {
+            alert("Your hand is full (max 8 cards)!");
+            setSelectingFromDeck(false);
+            return;
+        }
+    
+        // Add selected card to hand
+        setCurrentHand(prev => [...prev, selectedCard]);
+        
+        // Deduct action point
+        setCurrentActionPoints(prev => prev - 1);
+        
+        // Exit selection mode
+        setSelectingFromDeck(false);
+        
+        // Check if turn should switch
+        if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
+            switchTurn();
+        }
+    };
     // Function to discard the entire hand
     const discardAllCards = () => {
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
@@ -906,6 +954,28 @@ const GameBoard = () => {
                         </div>
                     </div>
                 )}
+                {selectingFromDeck && (
+                    <div style={styles.selectionModal}>
+                        <h2>Select one card to add to your hand</h2>
+                        <div style={styles.cardSelection}>
+                            {topCards.map((card, index) => (
+                                <div 
+                                    key={`top-card-${index}`}
+                                    style={styles.selectableCard}
+                                    onClick={() => selectCardFromTopThree(card)}
+                                >
+                                    <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                                </div>
+                            ))}
+                        </div>
+                        <button 
+                            onClick={() => setSelectingFromDeck(false)} 
+                            style={styles.cancelButton}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                )}
         </div>
         
     );
@@ -1094,7 +1164,48 @@ const styles = {
         borderRadius: '5px',
         cursor: 'pointer',
         zIndex: 100
-      }
+    },
+    selectionModal: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        zIndex: 100,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white'
+    },
+    cardSelection: {
+        display: 'flex',
+        gap: '20px',
+        margin: '20px 0'
+    },
+    selectableCard: {
+        width: '150px',
+        height: '200px',
+        border: '2px solid white',
+        borderRadius: '10px',
+        cursor: 'pointer',
+        transition: 'transform 0.2s',
+        ':hover': {
+            transform: 'scale(1.05)',
+            borderColor: 'yellow'
+        }
+    },
+    actionButton: {
+        padding: '10px 20px',
+        fontSize: '16px',
+        cursor: 'pointer',
+        backgroundColor: '#3F51B5',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '5px',
+        margin: '0 10px'
+    }
 };
 
 export default GameBoard
