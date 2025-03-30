@@ -26,7 +26,7 @@ import dice6 from "../assets/dice6.png";
 const GameBoard = () => {
     // Define your actual card data with types and affinities
     const cardList = [
-        { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid", min: 4, max: 10}, // Moose Druid has Druid affinity
+        { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid", min: 5, max: 7}, // Moose Druid has Druid affinity
         { id: 2, image: DarkGoblin, type: "Hero", affinity: "Dark" , min: 0, max: 6}, // Dark Goblin has Dark affinity
         { id: 3, image: DruidMask, type: "Item", affinity: "Druid" , min: 4, max: 10}, // Items and spells have no affinity
         { id: 4, image: DecoyDoll, type: "Item", affinity: null },
@@ -34,7 +34,7 @@ const GameBoard = () => {
         { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" , min: 0, max: 6},
         { id: 7, image: Bullseye, type: "Hero", affinity: "Consort" , min: 0, max: 4},
         { id: 8, image: Hydra, type: "Hero", affinity: "Serpentine" , min: 0, max: 0},
-        { id: 9, image: Cyborg20xx, type: "Hero", affinity: "Future", min: 5, max: 7},
+        { id: 9, image: Cyborg20xx, type: "Hero", affinity: "Future", min: 4, max: 10},
         { id: 10, image: Switcheroo, type: "Spell"},
         { id: 11, image: MAD, type: "Spell"},
     ];
@@ -76,6 +76,13 @@ const GameBoard = () => {
     const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
     const hasHero = opponentPlayedCards.some(card => card && card.type === "Hero");
 
+    function getBonus() {
+        const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
+        // Count how many Hydras (id: 8) are in the current player's slots
+        const bonus = currentPlayedCards.filter(card => card && card.id === 8).length;
+        return bonus; // Returns 0, 1, 2, etc.
+    };
+
     const heroEffect = (card, slotIndex) => {
         if (!card || (card.type !== "Hero")) return;
         
@@ -84,14 +91,16 @@ const GameBoard = () => {
         const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
         const setCurrentPlayedCards = currentPlayer === 1 ? setPlayedCards1 : setPlayedCards2;
         
+        // Get Hydra bonus based on count
+        const bonus = getBonus();
+        
         // Perform hero-specific effect
         const roll1 = Math.floor(Math.random() * 6) + 1;
         const roll2 = Math.floor(Math.random() * 6) + 1;
         
         setDiceRolls({ first: roll1, second: roll2 });
-        
-        // Calculate total roll
-        const totalRoll = roll1 + roll2;
+        // Calculate total roll with Hydra bonus
+        const totalRoll = roll1 + roll2 + bonus;
         
         switch(card.id) {
             case 1: // Moose Druid
@@ -110,6 +119,11 @@ const GameBoard = () => {
                 }
                 else {
                     alert(`${totalRoll} - Normal roll`);
+                }
+                break;
+            case 2:
+                if (totalRoll >= card.max) {
+                    pullFromOpponent()
                 }
                 break;
             case 6:
@@ -497,6 +511,38 @@ const GameBoard = () => {
         if (currentActionPoints - 1 <= 0) {
             switchTurn();
         }
+    };
+    const pullFromOpponent = () => {
+        if (!checkActionPoints()) return; // Check if player has action points
+        
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+        const opponentHand = currentPlayer === 1 ? player2Hand : player1Hand;
+        const setOpponentHand = currentPlayer === 1 ? setPlayer2Hand : setPlayer1Hand;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+    
+        // Check if opponent has cards
+        if (opponentHand.length === 0) {
+            alert("Opponent has no cards to take!");
+            return;
+        }
+    
+        // Check if current player's hand is full
+        if (currentHand.length >= 8) {
+            alert("Your hand is full (max 8 cards)!");
+            return;
+        }
+    
+        // Select random card from opponent's hand
+        const randomIndex = Math.floor(Math.random() * opponentHand.length);
+        const stolenCard = opponentHand[randomIndex];
+    
+        // Update both players' hands
+        setOpponentHand(prev => prev.filter((_, index) => index !== randomIndex));
+        setCurrentHand(prev => [...prev, {
+            ...stolenCard,
+            uniqueId: Date.now() // Assign new unique ID
+        }]);
     };
     const drawFromDiscard = () => {
         
