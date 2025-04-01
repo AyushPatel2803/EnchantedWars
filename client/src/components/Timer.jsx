@@ -1,34 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
-const Timer = () => {
-  const [time, setTime] = useState(0); // Timer starts at 0 seconds
+const Timer = ({ timeLeft }) => {
+    const [isAnimating, setIsAnimating] = useState(false);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime((prevTime) => prevTime + 1); // Increase time by 1 second
-    }, 1000);
+    useEffect(() => {
+        if (timeLeft === 10) {
+            setIsAnimating(true); // Trigger animation
+            setTimeout(() => setIsAnimating(false), 1000); // Reset animation after 1 second
+        }
+    }, [timeLeft]);
 
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, []);
+    return (
+        <div
+            style={{
+                ...styles.timerContainer,
+                backgroundColor: timeLeft <= 10 ? "#FF0000" : "#4CAF50", // Change to red when <= 10 seconds
+                animation: isAnimating ? "shake 0.5s ease" : "none", // Apply animation
+            }}
+        >
+            <h2 style={styles.timerText}>{timeLeft}s</h2>
+        </div>
+    );
+};
 
-  return (
-    <div style={StyleSheet.timer}>
-        <h2>Time: {time}s</h2>
-    </div>
-  );
-}
-
-const StyleSheet = {
-    timer: {
+const styles = {
+    timerContainer: {
         position: "absolute",
-        left: "20px", 
-        top: "15%",
-        transform: "translateY(-50%)",
-        background: "#BBB27D",
-        color: "black",
-        padding: "10px 20px",
-        borderRadius: "10px",
-        fontSize: "18px"
+        top: "10px",
+        left: "10px",
+        width: "80px",
+        height: "80px",
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+        color: "white",
+        fontSize: "18px",
+        fontWeight: "bold",
+        border: "3px solid #1B5E20",
+        transition: "background-color 0.3s ease",
+    },
+    timerText: {
+        margin: 0,
+        fontSize: "20px",
+        fontWeight: "bold",
+        fontFamily: "'Roboto', sans-serif",
     },
 };
 

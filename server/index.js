@@ -22,7 +22,19 @@ const TURN_DURATION = 60000; // 60 seconds
 
 // WebSocket connection handling
 io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log(`Player connected: ${socket.id}`);
+
+  socket.on("card_played", ({ slotIndex, card, currentPlayer }) => {
+    console.log(`Player ${currentPlayer} played a card in slot ${slotIndex}`);
+    // Broadcast the card placement to all clients
+    socket.broadcast.emit("card_played", { slotIndex, card, currentPlayer });
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`Player disconnected: ${socket.id}`);
+  });
+
+  socket.emit("player_assigned", { playerId: socket.id });
 
   socket.on("find_match", (username) => {
     if (waitingPlayer) {
@@ -47,14 +59,19 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("end_turn", () => {
-    if (gameSession && socket.id === gameSession.players[gameSession.currentPlayerIndex].id) {
-      endTurn();
-    }
+  socket.on("end_turn", ({ nextPlayer }) => {
+    console.log(`Switching to Player ${nextPlayer}`);
+    io.emit("turn_update", { nextPlayer }); // Notify all clients of the turn change
+  });
+
+  socket.on("card_played", ({ slotIndex, card, currentPlayer }) => {
+    console.log(`Player ${currentPlayer} played a card in slot ${slotIndex}`);
+    // Broadcast the card placement to all clients
+    socket.broadcast.emit("card_played", { slotIndex, card, currentPlayer });
   });
 
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
+    console.log(`Player disconnected: ${socket.id}`);
 
     // Remove from queue if they were waiting
     if (waitingPlayer && waitingPlayer.id === socket.id) {
@@ -74,7 +91,7 @@ function startTurn() {
   if (!gameSession) return;
 
   const currentPlayer = gameSession.players[gameSession.currentPlayerIndex];
-  io.emit("turn_start", { playerId: currentPlayer.id });
+  io.to(currentPlayer.id).emit("turn_start", { playerId: currentPlayer.id });
 
   turnTimer = setTimeout(() => {
     endTurn();
@@ -93,3 +110,5 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+

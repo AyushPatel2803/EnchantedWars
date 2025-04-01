@@ -1,150 +1,201 @@
 import React, { useEffect, useState } from "react";
 import Timer from "./Timer";
-import ActionPoints from "./ActionPoints";
 import DrawCard from "./DrawCard";
-import PartyLeaderSelection from "./PartyLeaderSelection"; // Import the new component
-import OpponentCardSlot from "./OpponentCardSlot"; // Import the new component
+import PartyLeaderSelection from "./PartyLeaderSelection";
+import OpponentCardSlot from "./OpponentCardSlot";
 import { io } from "socket.io-client";
-import { useLocation } from "react-router-dom";
 import "./GameBoard.css";
 
-// Import Card Images
 import MooseDruid from "../assets/MooseDruid.png";
 import DarkGoblin from "../assets/DarkGoblin.png";
 import DruidMask from "../assets/DruidMask.png";
 import DecoyDoll from "../assets/DecoyDoll.png";
 import CriticalBoost from "../assets/CriticalBoost.png";
 
-const socket = io("http://localhost:3000"); // Adjust based on your backend port
+const socket = io("http://localhost:3000");
 
 const GameBoard = () => {
-    const location = useLocation();
-    const { playerName } = location.state || { playerName: "Unknown Player" }; // Default to 'Unknown Player' if no name is provided
+    const [player1Hand, setPlayer1Hand] = useState([]);
+    const [player2Hand, setPlayer2Hand] = useState([]);
+    const [player1ActionPoints, setPlayer1ActionPoints] = useState(3);
+    const [player2ActionPoints, setPlayer2ActionPoints] = useState(3);
+    const [currentPlayer, setCurrentPlayer] = useState(1);
+    const [playedCards, setPlayedCards] = useState(Array(5).fill(null));
+    const [opponentPlayedCards, setOpponentPlayedCards] = useState(Array(5).fill(null));
+    const [discardPile, setDiscardPile] = useState([]);
+    const [selectedLeader, setSelectedLeader] = useState(null);
+    const [timeLeft, setTimeLeft] = useState(60);
+    const [playerId, setPlayerId] = useState(null);
 
-    // Define your actual card data
-    const initialCards = [
-        { id: 1, image: MooseDruid },
-        { id: 2, image: DarkGoblin },
-        { id: 3, image: DruidMask },
-        { id: 4, image: DecoyDoll },
-        { id: 5, image: CriticalBoost },
+    const cardList = [
+        { id: 1, name: "Moose Druid", image: MooseDruid },
+        { id: 2, name: "Dark Goblin", image: DarkGoblin },
+        { id: 3, name: "Druid Mask", image: DruidMask },
+        { id: 4, name: "Decoy Doll", image: DecoyDoll },
+        { id: 5, name: "Critical Boost", image: CriticalBoost },
     ];
 
-    // State variables
-    const [playerHand, setPlayerHand] = useState(initialCards);
-    const [playedCards, setPlayedCards] = useState(Array(5).fill(null)); // 5 slots for played cards
-    const [opponentPlayedCards, setOpponentPlayedCards] = useState(Array(5).fill(null)); // 5 slots for opponent played cards
-    const [discardPile, setDiscardPile] = useState([]);
-    const [selectedLeader, setSelectedLeader] = useState(null); // State for selected party leader
-    const [timeLeft, setTimeLeft] = useState(60); // State for countdown timer
-
     useEffect(() => {
-        socket.on("connect", () => {
-            console.log(`Connected to server with ID: ${socket.id}`);
-        });
-
-        socket.on("disconnect", () => {
-            console.log(`Disconnected from server`);
-        });
+        socket.on("connect", () => console.log(`Connected to server with ID: ${socket.id}`));
+        socket.on("disconnect", () => console.log("Disconnected from server"));
 
         socket.on("turn_start", () => {
-            setTimeLeft(60); // Reset the timer to 60 seconds at the start of each turn
+            setTimeLeft(60);
+            setPlayer1ActionPoints(3);
+            setPlayer2ActionPoints(3);
+        });
+
+        socket.on("turn_update", ({ nextPlayer }) => {
+            setCurrentPlayer(nextPlayer);
+            setTimeLeft(60);
+        });
+
+        socket.on("card_played", ({ slotIndex, card }) => {
+            setOpponentPlayedCards((prev) => {
+                const newPlayed = [...prev];
+                newPlayed[slotIndex] = card;
+                return newPlayed;
+            });
+        });
+
+        socket.on("player_assigned", ({ playerId }) => {
+            setPlayerId(playerId);
         });
 
         return () => {
-            socket.disconnect();
+            socket.off("connect");
+            socket.off("disconnect");
+            socket.off("turn_start");
+            socket.off("turn_update");
+            socket.off("card_played");
+            socket.off("player_assigned");
         };
     }, []);
 
     useEffect(() => {
         if (timeLeft > 0) {
-            const timerId = setTimeout(() => {
-                setTimeLeft(timeLeft - 1);
-            }, 1000);
+            const timerId = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
             return () => clearTimeout(timerId);
         } else {
-            socket.emit("end_turn"); // Automatically end the turn when the timer runs out
+            socket.emit("end_turn");
         }
     }, [timeLeft]);
 
-    // Function to discard the entire hand
-    const discardAllCards = () => {
-        if (playerHand.length === 0) {
-            alert("No cards to discard!");
+    useEffect(() => {
+        const getRandomCards = () => {
+            const shuffledCards = [...cardList].sort(() => Math.random() - 0.5);
+            return shuffledCards.slice(0, 5);
+        };
+
+        setPlayer1Hand(getRandomCards());
+        setPlayer2Hand(getRandomCards());
+    }, []);
+
+    const checkActionPoints = () => {
+        const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
+
+        if (currentActionPoints <= 0) {
+            alert(`Player ${currentPlayer}, you have run out of action points! Switching to the other player.`);
+            switchTurn();
+            return false;
+        }
+        return true;
+    };
+
+    const switchTurn = () => {
+        const nextPlayer = currentPlayer === 1 ? 2 : 1;
+        setCurrentPlayer(nextPlayer);
+        setTimeLeft(60);
+        socket.emit("end_turn", { nextPlayer });
+    };
+
+    const handleDrawCard = () => {
+        if (!checkActionPoints()) return;
+
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+
+        if (currentHand.length >= 8) {
+            alert("You cannot have more than 8 cards in your hand!");
             return;
         }
 
-        // Move all cards from the player's hand to the discard pile
-        setDiscardPile((prevDiscardPile) => [...prevDiscardPile, ...playerHand]);
-        setPlayerHand([]); // Clear the player's hand
-    };
+        const randomCard = { ...cardList[Math.floor(Math.random() * cardList.length)], uniqueId: Date.now() };
 
-    // Drag-and-drop handlers
-    const handleDragStart = (e, card) => {
-        e.dataTransfer.setData("card", JSON.stringify(card)); // Store the card data
-    };
+        setCurrentHand((prevHand) => [...prevHand, randomCard]);
+        setCurrentActionPoints((prev) => prev - 1);
 
-    const handleDragOver = (e) => {
-        e.preventDefault(); // Allow dropping
+        if (currentPlayer === 1 && player1ActionPoints - 1 === 0) switchTurn();
+        if (currentPlayer === 2 && player2ActionPoints - 1 === 0) switchTurn();
     };
 
     const handleDrop = (e, slotIndex) => {
         e.preventDefault();
-        const card = JSON.parse(e.dataTransfer.getData("card")); // Retrieve the card data
+        const card = JSON.parse(e.dataTransfer.getData("card"));
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
 
-        // Move the card from the player's hand to the play area
-        setPlayerHand((prevHand) => prevHand.filter((c) => c.id !== card.id));
-        setPlayedCards((prevPlayed) => {
-            const newPlayed = [...prevPlayed];
-            newPlayed[slotIndex] = card; // Place the card in the specified slot
+        if (!checkActionPoints()) return;
+
+        setCurrentHand((prev) => prev.filter((c) => c.id !== card.id));
+        setPlayedCards((prev) => {
+            const newPlayed = [...prev];
+            newPlayed[slotIndex] = card;
             return newPlayed;
         });
+
+        socket.emit("card_played", { slotIndex, card });
+        setCurrentActionPoints((prev) => prev - 1);
     };
 
-    // Handle party leader selection
-    const handleLeaderSelect = (leader) => {
-        setSelectedLeader(leader);
-    };
+    const discardAllCards = () => {
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
 
-    // Get the last discarded card (or null if the discard pile is empty)
-    const lastDiscardedCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null;
+        if (!checkActionPoints()) return;
+
+        setDiscardPile((prev) => [...prev, ...currentHand]);
+
+        const getRandomCards = () => {
+            const shuffledCards = [...cardList].sort(() => Math.random() - 0.5);
+            return shuffledCards.slice(0, 5);
+        };
+
+        setCurrentHand(getRandomCards());
+        setCurrentActionPoints((prev) => prev - 2);
+    };
 
     return (
         <div className="game-board-container">
             {!selectedLeader ? (
-                <PartyLeaderSelection onLeaderSelect={handleLeaderSelect} />
+                <PartyLeaderSelection onLeaderSelect={setSelectedLeader} />
             ) : (
                 <div style={styles.gameBoard}>
                     <Timer timeLeft={timeLeft} />
-                    <ActionPoints />
                     <div style={styles.drawCardContainer}>
-                        <DrawCard />
+                        <DrawCard onDrawCard={handleDrawCard} />
                     </div>
-
-                    {/* Player's name and selected leader in the top right corner */}
                     <div style={styles.playerInfo}>
-                        <div style={styles.playerName}>{playerName}</div>
                         {selectedLeader && (
                             <div style={styles.leader}>
                                 <img src={selectedLeader.image} alt={selectedLeader.name} style={styles.leaderImage} />
                             </div>
                         )}
                     </div>
-
-                    {/* Opponent Play Area */}
                     <div style={styles.opponentPlayArea}>
                         {opponentPlayedCards.map((card, index) => (
                             <OpponentCardSlot key={index} card={card} />
                         ))}
                     </div>
-
-                    {/* Play Area */}
                     <div style={styles.playArea}>
                         {playedCards.map((card, index) => (
                             <div
                                 key={index}
                                 style={styles.slot}
-                                onDragOver={handleDragOver}
+                                onDragOver={(e) => e.preventDefault()}
                                 onDrop={(e) => handleDrop(e, index)}
                             >
                                 {card ? (
@@ -157,23 +208,28 @@ const GameBoard = () => {
                             </div>
                         ))}
                     </div>
-
-                    {/* Player Hand */}
                     <h2>Player Hand</h2>
                     <div style={styles.hand}>
-                        {playerHand.map((card) => (
-                            <div key={card.id} draggable onDragStart={(e) => handleDragStart(e, card)} style={styles.card}>
+                        {(currentPlayer === 1 ? player1Hand : player2Hand).map((card) => (
+                            <div
+                                key={card.id}
+                                draggable
+                                onDragStart={(e) => e.dataTransfer.setData("card", JSON.stringify(card))}
+                                style={styles.card}
+                            >
                                 <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
                             </div>
                         ))}
                     </div>
-
-                    {/* Discard Pile and Discard Button */}
                     <div style={styles.discardContainer}>
                         <div style={styles.discardPile}>
-                            {lastDiscardedCard ? (
+                            {discardPile.length > 0 ? (
                                 <div style={styles.card}>
-                                    <img src={lastDiscardedCard.image} alt={`Card ${lastDiscardedCard.id}`} style={styles.cardImage} />
+                                    <img
+                                        src={discardPile[discardPile.length - 1].image}
+                                        alt="Last Discarded Card"
+                                        style={styles.cardImage}
+                                    />
                                 </div>
                             ) : (
                                 <div style={styles.slot}>
@@ -185,76 +241,70 @@ const GameBoard = () => {
                             Discard
                         </button>
                     </div>
+                    <div style={styles.actionPointsContainer}>
+                        <h3 style={styles.actionPointsText}>
+                            Action Points: {currentPlayer === 1 ? player1ActionPoints : player2ActionPoints}
+                        </h3>
+                    </div>
+                    <button onClick={switchTurn} style={styles.endTurnButton}>
+                        End Turn
+                    </button>
                 </div>
             )}
         </div>
     );
 };
 
-// Styles
-// ... (keep the imports and initial code the same)
-
 const styles = {
     gameBoard: {
         position: "relative",
         textAlign: "center",
-        padding: "1vh", // Reduce padding
-        border: "3px solid black", // Reduce border size
+        padding: "1vh",
+        border: "3px solid black",
         background: "#162C24",
-        height: "90vh", // Reduce height
-        maxWidth: "1400px", // Reduce max-width
-        margin: "0 auto", // Center the game board
+        height: "90vh",
+        maxWidth: "1400px",
+        margin: "0 auto",
         display: "flex",
         flexDirection: "column",
     },
     playerInfo: {
         position: "absolute",
-        top: "1vh", // Reduce top margin
-        right: "1vw", // Reduce right margin
+        top: "1vh",
+        right: "1vw",
         color: "#fff",
         textAlign: "right",
     },
-    playerName: {
-        fontSize: "1rem", // Reduce font size
-        fontWeight: "bold",
-    },
-    leader: {
-        marginTop: "0.5vh", // Reduce top margin
-    },
     leaderImage: {
-        width: "80px", // Reduce size
-        height: "120px", // Reduce size
-    },
-    drawCardContainer: {
-        transform: "scale(0.7)", // Scale down the DrawCard component further
-        transformOrigin: "top left",
+        width: "80px",
+        height: "120px",
     },
     opponentPlayArea: {
         display: "flex",
         justifyContent: "center",
-        gap: "0.5vw", // Reduce gap
-        margin: "1vh 0", // Reduce margin
+        gap: "0.5vw",
+        margin: "1vh 0",
         flexWrap: "wrap",
-        padding: "0 1vw", // Reduce padding
+        padding: "0 1vw",
     },
     hand: {
         display: "flex",
         justifyContent: "center",
-        gap: "0.5vw", // Reduce gap
+        gap: "0.5vw",
         flexWrap: "wrap",
-        margin: "1vh 0", // Reduce margin
-        padding: "0 1vw", // Reduce padding
+        margin: "1vh 0",
+        padding: "0 1vw",
     },
     card: {
-        width: "calc(120px + 1vw)", // Reduce card width
-        height: "calc(160px + 1vh)", // Reduce card height
-        border: "1px solid #888", // Reduce border size
-        borderRadius: "8px", // Reduce border radius
+        width: "calc(120px + 1vw)",
+        height: "calc(160px + 1vh)",
+        border: "1px solid #888",
+        borderRadius: "8px",
         overflow: "hidden",
         cursor: "grab",
         flexShrink: 0,
-        maxWidth: "150px", // Reduce max width
-        maxHeight: "200px", // Reduce max height
+        maxWidth: "150px",
+        maxHeight: "200px",
     },
     cardImage: {
         width: "100%",
@@ -264,72 +314,76 @@ const styles = {
     playArea: {
         display: "flex",
         justifyContent: "center",
-        gap: "0.5vw", // Reduce gap
-        margin: "1vh 0", // Reduce margin
+        gap: "0.5vw",
+        margin: "1vh 0",
         flexWrap: "wrap",
-        padding: "0 1vw", // Reduce padding
+        padding: "0 1vw",
     },
     slot: {
-        width: "calc(120px + 1vw)", // Reduce slot width
-        height: "calc(160px + 1vh)", // Reduce slot height
-        border: "1px dashed #ccc", // Reduce border size
-        borderRadius: "8px", // Reduce border radius
+        width: "calc(120px + 1vw)",
+        height: "calc(160px + 1vh)",
+        border: "1px dashed #ccc",
+        borderRadius: "8px",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#1E7149",
-        maxWidth: "150px", // Reduce max width
-        maxHeight: "200px", // Reduce max height
+        maxWidth: "150px",
+        maxHeight: "200px",
     },
     emptySlot: {
         color: "#888",
-        fontSize: "0.75rem", // Reduce font size
+        fontSize: "0.75rem",
     },
     discardContainer: {
         position: "absolute",
-        bottom: "1vh", // Reduce bottom margin
-        right: "1vw", // Reduce right margin
+        bottom: "1vh",
+        right: "1vw",
         textAlign: "center",
     },
     discardPile: {
-        marginBottom: "0.5vh", // Reduce bottom margin
+        marginBottom: "0.5vh",
     },
     discardButton: {
-        padding: "0.5vh 1vw", // Reduce padding
-        fontSize: "0.8rem", // Reduce font size
+        padding: "0.5vh 1vw",
+        fontSize: "0.8rem",
         cursor: "pointer",
         backgroundColor: "#4CAF50",
         color: "#fff",
         border: "none",
-        borderRadius: "4px", // Reduce border radius
-        minWidth: "80px", // Reduce min width
+        borderRadius: "4px",
+        minWidth: "80px",
+    },
+    actionPointsContainer: {
+        position: "absolute",
+        bottom: "10px",
+        left: "10px",
+        backgroundColor: "#FF0000",
+        color: "white",
+        padding: "10px 20px",
+        borderRadius: "8px",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+        fontSize: "16px",
+        fontWeight: "bold",
+        border: "2px solid #B22222",
+    },
+    actionPointsText: {
+        margin: 0,
+    },
+    endTurnButton: {
+        position: "absolute",
+        bottom: "10px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        padding: "10px 20px",
+        fontSize: "1rem",
+        cursor: "pointer",
+        backgroundColor: "#FF5722",
+        color: "#fff",
+        border: "none",
+        borderRadius: "8px",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
     },
 };
-
-// Add media queries for different screen sizes
-const mediaQueries = {
-    '@media (max-width: 1200px)': {
-        card: {
-            width: "calc(100px + 1vw)",
-            height: "calc(133px + 1vh)",
-        },
-        slot: {
-            width: "calc(100px + 1vw)",
-            height: "calc(133px + 1vh)",
-        },
-    },
-    '@media (max-width: 768px)': {
-        card: {
-            width: "calc(80px + 1vw)",
-            height: "calc(106px + 1vh)",
-        },
-        slot: {
-            width: "calc(80px + 1vw)",
-            height: "calc(106px + 1vh)",
-        },
-    },
-};
-
-// You might also want to add some CSS in your GameBoard.css file:
 
 export default GameBoard;
