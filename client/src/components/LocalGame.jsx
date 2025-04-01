@@ -40,7 +40,7 @@ const GameBoard = () => {
     ];
     // State Variables
     const handleMouseEnter = (card, slotIndex) => {
-        if (card) {
+        if (card.type == "Hero" && card.max != 0) {
             setHoveredCard({ card, slotIndex });
         }
     };
@@ -111,13 +111,13 @@ const GameBoard = () => {
                     return;
                 }
                 else if (totalRoll <= card.min) {
-                    // Self-destruct this hero
                     setDiscardPile(prev => [...prev, card]);
                     setCurrentPlayedCards(prev => {
                         const newPlayed = [...prev];
                         newPlayed[slotIndex] = null;
                         return newPlayed;
                     });
+                    break;
                 }
                 else {
                     alert(`${totalRoll} - Normal roll`);
@@ -195,13 +195,16 @@ const GameBoard = () => {
                 break;
             }
             case 11: {
-                if (hasHero) {
-                    discardCard();
-                    discardCard();
+                if (hasHero && currentHand.length - 2 > 0) {
                     activateDestroyMode();
+                    setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellCard.uniqueId));
+                    setDiscardPile(prev => [...prev, spellCard]);
+                    discardCard();
+                    discardCard();
                     return;
                 }
                 else {
+                    alert('Not enough cards to make sacrifice')
                     return;
                 }
                 break;
@@ -798,7 +801,7 @@ const GameBoard = () => {
                     )}
                 </div>
                 <button onClick={discardAllCards} style={styles.discardButton}>
-                    Discard Deck
+                    Replace Hand
                 </button>
             </div>
             <div style={styles.diceContainer}>

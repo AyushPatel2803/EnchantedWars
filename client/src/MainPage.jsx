@@ -1,49 +1,67 @@
 import React, { useState } from 'react';
+import TitlePNG from './assets/Enchanted Wars.png';
 import './MainPage.css';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000'); // Adjust based on your backend port
+const socket = io('http://localhost:3000'); // Adjust as needed
 
 function MainPage() {
-    const [isSearching, setIsSearching] = useState(false); // Searching for match state
-    const [playerName, setPlayerName] = useState(''); // Player name state
-    const navigate = useNavigate();
+  const [isSearching, setIsSearching] = useState(false);
+  const [playerName, setPlayerName] = useState('');
+  const navigate = useNavigate();
 
-    // Handle Find Match Click
-    const handleFindMatch = () => {
-        setIsSearching(true);
-        // Emit join_game event to the server
-        socket.emit('join_game', playerName);
-        // Simulate finding a match
-        setTimeout(() => {
-            setIsSearching(false);
-            navigate('/game', { state: { playerName } }); // Pass player name to game screen
-        }, 2000); // Simulate a delay for finding a match
-    };
-    const handleLocalMatch = () => {
-        navigate('/local-game'); // Pass player name to local game screen
-    }
+  const handleFindMatch = () => {
+    setIsSearching(true);
+    socket.emit('join_game', playerName);
+    setTimeout(() => {
+      setIsSearching(false);
+      navigate('/game', { state: { playerName } });
+    }, 2000);
+  };
 
-    return (
-        <div className="main-page">
-            <h1>Welcome to the Game</h1>
-            <div className="actions">
-                <input
-                    type="text"
-                    placeholder="Enter your name"
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                />
-                <button onClick={handleFindMatch} disabled={isSearching || !playerName}>
-                    {isSearching ? 'Searching...' : 'Find Match'}
-                </button>
-                <button onClick={handleLocalMatch}>
-                    Local Match
-                </button>
+  const handleLocalMatch = () => {
+    navigate('/local-game');
+  };
+
+  return (
+    <div className="background-wrapper">
+      {/* Existing glowing orbs using pseudo-elements are already set via CSS (::before and ::after) */}
+
+      {/* Add two new glowing orbs */}
+      <div className="glowing-orb orb-3"></div>
+      <div className="glowing-orb orb-4"></div>
+      <div className="glowing-orb orb-5"></div>
+      <div className="glowing-orb orb-6"></div>
+      <div className="main-container">
+        {/* Title, input, and buttons go here */}
+        <img src={TitlePNG} alt="Enchanted Wars" className="title-image" />
+        <div className="actions">
+          <div className="center-content">
+            <input
+              type="text"
+              placeholder="Enter Your Name"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              className="name-input"
+            />
+            <div className="button-row">
+              <button
+                className="modern-button"
+                onClick={handleFindMatch}
+                disabled={isSearching || !playerName}
+              >
+                {isSearching ? 'Searching...' : 'Find Match'}
+              </button>
+              <button className="modern-button" onClick={handleLocalMatch}>
+                Local Match
+              </button>
             </div>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default MainPage;

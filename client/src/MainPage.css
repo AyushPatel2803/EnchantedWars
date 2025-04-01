@@ -1,146 +1,195 @@
-.main-container {
-    background-color: #012e1b; 
-    height: 100vh;
-    color: white;
-    font-family: 'Arial', sans-serif;
+/* Reset default margins */
+html, body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Main container: full screen with centered content and a swirling radial gradient background */
+  .main-container {
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 20px; 
-}
-
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%; 
-    max-width: 600px; 
-    margin-bottom: 20px; 
-}
-
-.icon {
-    width: 60px; 
-    height: 60px;
+    font-family: 'Arial', sans-serif;
+    color: white;
+    background: transparent;
+  }
+  
+  .background-wrapper {
+    position: relative; 
+    min-height: 100vh;
+    overflow: hidden;    
+  
+    background: url("./assets/fantasy_forest_background.png") center no-repeat;
+    background-size: cover;
+  
+    /* Animate the background-size to create a breathing (zoom in/out) effect */
+    animation: breathing 8s ease-in-out infinite;
+  }
+  
+  @keyframes breathing {
+    0% {
+      background-size: 100% 100%;
+    }
+    50% {
+      background-size: 102% 102%; /* Slight zoom in at midpoint */
+    }
+    100% {
+      background-size: 100% 100%; /* Zoom back out */
+    }
+  }
+  
+  .background-wrapper::before,
+  .background-wrapper::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
     border-radius: 50%;
-    background-size: cover; 
-    background-position: center; 
-}
-
-h1 {
-    font-size: 48px; 
-    text-align: center;
-    flex-grow: 1;
-    margin-bottom: 200px
-}
-
-.button-container {
-    width: 100%; 
-    max-width: 360px; 
-
-}
-
-.button-row {
+    background: radial-gradient(circle, rgba(0,255,0,0.6) 0%, rgba(0,255,0,0) 70%);
+    animation: glow 2s ease-in-out infinite;
+  }
+  
+  /* If you have multiple orbs, you can use multiple pseudo-elements or multiple absolutely positioned divs. */
+  .background-wrapper::before {
+    /* Orb #1 - position it at the approximate location of the first glowing spot */
+    top: 40%;
+    left: 40%;
+    width: 100px;
+    height: 100px;
+  }
+  
+  .background-wrapper::after {
+    /* Orb #2 - another location */
+    top: 60%;
+    left: 70%;
+    width: 100px;
+    height: 100px;
+  }
+  
+  @keyframes glow {
+    0% {
+      opacity: 0.4; /* Dim start */
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8; /* Brighter at midpoint */
+      transform: scale(1.2); /* Slightly bigger */
+    }
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+  }
+  
+  /* Common styles for all glowing orbs added as HTML elements */
+  .glowing-orb {
+    position: absolute;
+    pointer-events: none; /* So they don't block clicks */
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(115, 250, 115, 0.6) 0%, rgba(0,255,0,0) 70%);
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  /* Additional orb 3 */
+  .orb-3 {
+    top: 10%;    /* Adjust position as needed */
+    left: 80%;   /* Adjust position as needed */
+    width: 90px; /* Adjust size as needed */
+    height: 90px;
+  }
+  
+  /* Additional orb 4 */
+  .orb-4 {
+    top: 80%;    /* Adjust position as needed */
+    left: 20%;   /* Adjust position as needed */
+    width: 110px; /* Adjust size as needed */
+    height: 110px;
+  }
+  
+  .orb-5 {
+    top: 10%;    /* Adjust position as needed */
+    left: 10%;   /* Adjust position as needed */
+    width: 90px; /* Adjust size as needed */
+    height: 90px;
+  }
+  
+  /* Additional orb 4 */
+  .orb-6 {
+    top: 50%;    /* Adjust position as needed */
+    left: 20%;   /* Adjust position as needed */
+    width: 110px; /* Adjust size as needed */
+    height: 110px;
+  }
+  
+  /* Glow animation keyframes (if not already defined) */
+  @keyframes glow {
+    0% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.2);
+    }
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+  }
+  
+  /* Title image: ensures responsiveness and spacing below */
+  .title-image {
+    max-width: 90%;
+    height: auto;
+    margin-bottom: 2rem; /* Adjust this value for more or less space below the title */
+  }
+  
+  /* Name input: styles for the input and spacing below */
+  .name-input {
+    width: 300px;
+    padding: 15px 20px;
+    font-size: 1rem;
+    border: 3px solid #c9a95c;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f6e6b4 0%, #f5f0d1 100%);
+    color: #3b2708;
+    text-shadow: 0 1px 0 #fff;
+    box-shadow: 0 0 5px rgba(201, 169, 92, 0.7), inset 0 0 3px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    margin-top: 15rem;
+    margin-bottom: 2rem; /* Space between the input and the buttons */
+  }
+  
+  /* Button row: arrange buttons horizontally with spacing */
+  .button-row {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-button {
-    background-color: #f7d200; 
+    gap: 4rem;
+  }
+  
+  /* Modern button styling */
+  .modern-button {
+    background-color: #f7d200;
+    color: #000;
     border: none;
-    border-radius: 20px;
-    color: rgb(0, 0, 0);
-    font-size: 16px;
+    border-radius: 30px;
     padding: 12px 24px;
-    width: 160px; 
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: background-color 0.3s;
-}
-p {
-    color: black;
-}
-
-h2 {
-    color: black;
-}
-li {
-    color: black;
-}
-button:hover {
-    background-color: #d6c77e; 
-}
-
-.logo-button {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    width: 50px; 
-    height: 50px; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.settings-button {
-    position: absolute;
-    top: 20px;
-    right: 20px; 
-    background-color: #4CAF50; 
-    border: none;
-    cursor: pointer;
-    padding: 10px;
-    width: 60px; 
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 30px; 
-    color: white; 
     font-size: 16px;
-}
-
-.settings-image {
-    width: 100%;
-    height: 100%;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-.rules-modal {
-    display: block; 
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #fff; 
-    color: #000; 
-    padding: 20px;
-    z-index: 1000;
-    overflow-y: auto; 
-    max-height: 80vh; 
-    width: 80%; 
-    border: 2px solid black; 
-}
-
-.spinner {
-    border: 4px solid rgba(0,0,0,0.1);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border-left-color: #09f;
-    animation: spin 1s infinite linear;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .modern-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+  }
+  
+  .modern-button:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
 
