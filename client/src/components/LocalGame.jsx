@@ -197,10 +197,10 @@ const GameBoard = () => {
             case 11: {
                 if (hasHero && currentHand.length - 2 > 0) {
                     activateDestroyMode();
+                    discardCard();
+                    discardCard();
                     setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellCard.uniqueId));
                     setDiscardPile(prev => [...prev, spellCard]);
-                    discardCard();
-                    discardCard();
                     return;
                 }
                 else {
@@ -925,38 +925,57 @@ const GameBoard = () => {
                         </button>
                     </div>
                 )}
-                {/* Add this modal for selecting opponent hero to destroy */}
+                {/* Destroy Opponents Hero */}
                 {destroyMode && (
-                    <div style={styles.destroyModal}>
-                        <h2>Select an opponent Hero to destroy</h2>
-                        <div style={styles.playArea}>
-                            {(currentPlayer === 1 ? playedCards2 : playedCards1).map((card, index) => (
-                                <div
-                                    key={`destroy-opponent-${index}`}
-                                    style={{
-                                        ...styles.slot,
-                                        border: '4px solid red',
-                                        cursor: 'pointer'
-                                    }}
-                                    onClick={() => destroyOpponentHero(index)}
-                                >
-                                    {card && (
-                                        <div style={styles.card}>
-                                            <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
-                                            {card.items?.length > 0 && (
-                                                <div style={styles.items}>
-                                                    {card.items.map((item, itemIndex) => (
-                                                        <img key={`destroy-item-${itemIndex}`} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                        <div style={{ 
+                            position: 'fixed', 
+                            top: 0, 
+                            left: 0, 
+                            right: 0, 
+                            bottom: 0, 
+                            backgroundColor: 'rgba(0,0,0,0.7)', 
+                            zIndex: 99,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white'
+                        }}>
+                            <h2>Select an opponent Hero to destroy</h2>
+                            <div style={styles.playArea}>
+                                {(currentPlayer === 1 ? playedCards2 : playedCards1).map((card, index) => (
+                                    <div
+                                        key={`destroy-opponent-${index}`}
+                                        style={{
+                                            ...styles.slot,
+                                            border: card && card.type === "Hero" ? '4px solid red' : '2px dashed #ccc',
+                                            cursor: card && card.type === "Hero" ? 'pointer' : 'default'
+                                        }}
+                                        onClick={() => card && card.type === "Hero" && destroyOpponentHero(index)}
+                                    >
+                                        {card && (
+                                            <div style={styles.card}>
+                                                <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                                                {card.items?.length > 0 && (
+                                                    <div style={styles.items}>
+                                                        {card.items.map((item, itemIndex) => (
+                                                            <img key={`destroy-item-${itemIndex}`} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            <button 
+                                onClick={() => setDestroyMode(false)} 
+                                style={styles.cancelButton}
+                            >
+                                Cancel
+                            </button>
                         </div>
-                    </div>
-                )}
+                    )}
                 {selectingFromDeck && (
                     <div style={styles.selectionModal}>
                         <h2>Select one card to add to your hand</h2>
