@@ -15,6 +15,11 @@ import Hydra from "../assets/Hydra.png";
 import Cyborg20xx from "../assets/Cyborg 20xx.png";
 import Switcheroo from "../assets/Switcheroo.png";
 import MAD from "../assets/MAD.png";
+import RoboMask from"../assets/RoboMask.png"
+import SpectreMask from "../assets/SpectreMask.png"
+import ChimeraMask from "../assets/ChimeraMask.png"
+import SerpentMask from "../assets/SerpentMask.png"
+import ConsortArmor from "../assets/ConsortHelmet.png"
 
 import dice1 from "../assets/dice1.png";
 import dice2 from "../assets/dice2.png";
@@ -34,9 +39,14 @@ const GameBoard = () => {
         { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" , min: 0, max: 6},
         { id: 7, image: Bullseye, type: "Hero", affinity: "Consort" , min: 0, max: 4},
         { id: 8, image: Hydra, type: "Hero", affinity: "Serpentine" , min: 0, max: 0},
-        { id: 9, image: Cyborg20xx, type: "Hero", affinity: "Future", min: 4, max: 10},
+        { id: 9, image: Cyborg20xx, type: "Hero", affinity: "Cyborg", min: 4, max: 10},
         { id: 10, image: Switcheroo, type: "Spell"},
         { id: 11, image: MAD, type: "Spell"},
+        { id: 12, image: RoboMask, type: "Item", affinity: "Cyborg"},
+        { id: 13, image: SpectreMask, type: "Item", affinity: "Undead"},
+        { id: 14, image: ChimeraMask, type: "Item", affinity: "Dark"},
+        { id: 15, image: SerpentMask, type: "Item", affinity: "Serpentine"},
+        { id: 16, image: ConsortArmor, type: "Item", affinity: "Consort"},
     ];
     // State Variables
     const handleMouseEnter = (card, slotIndex) => {
@@ -195,11 +205,13 @@ const GameBoard = () => {
                 break;
             }
             case 11: {
-                if (hasHero && currentHand.length - 2 > 0) {
+                if (hasHero && currentHand.length - 3 > 0) {
+                    setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellCard.uniqueId));
+                    setDiscardPile(prev => [...prev, spellCard]);
                     activateDestroyMode();
                     discardCard();
                     discardCard();
-                    break;
+                    return;
                 }
                 else {
                     alert('Not enough cards to make sacrifice')
@@ -214,6 +226,8 @@ const GameBoard = () => {
         // Remove the spell from hand and add to discard pile
         setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellCard.uniqueId));
         setDiscardPile(prev => [...prev, spellCard]);
+
+        setCurrentActionPoints((prev) => prev - 1);
             
         if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
             switchTurn();
@@ -552,6 +566,10 @@ const GameBoard = () => {
         setCurrentActionPoints(prev => prev - 1);
         
         setDestroyMode(false);
+
+        if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
+            switchTurn();
+        }
 
         return;
     
