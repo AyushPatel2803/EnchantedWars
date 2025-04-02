@@ -21,7 +21,7 @@ html, body {
     min-height: 100vh;
     overflow: hidden;    
   
-    background: url("./assets/fantasy_forest_background.png") center no-repeat;
+    background: url("./assets/background.png") center no-repeat;
     background-size: cover;
   
     /* Animate the background-size to create a breathing (zoom in/out) effect */
@@ -46,7 +46,7 @@ html, body {
     position: absolute;
     pointer-events: none;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,255,0,0.6) 0%, rgba(0,255,0,0) 70%);
+    background: radial-gradient(circle, rgba(255, 231, 98, 0.6) 0%, rgba(255, 217, 94, 0) 70%);
     animation: glow 2s ease-in-out infinite;
   }
   
@@ -87,7 +87,7 @@ html, body {
     position: absolute;
     pointer-events: none; /* So they don't block clicks */
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(115, 250, 115, 0.6) 0%, rgba(0,255,0,0) 70%);
+    background: radial-gradient(circle, rgba(250, 230, 115, 0.6) 0%, rgba(0,255,0,0) 70%);
     animation: glow 2s ease-in-out infinite alternate;
   }
   

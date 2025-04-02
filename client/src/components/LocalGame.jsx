@@ -173,7 +173,7 @@ const GameBoard = () => {
         switch(spellCard.id) {
             case 5: { // Critical Boost
                 // Check if player has room for 3 more cards
-                if (currentHand.length + 3 > 8) {
+                if (currentHand.length + 3 > 8 ) {
                     alert("Critical Boost failed! Your hand would exceed 8 cards.");
                     return;
                 }
@@ -199,9 +199,7 @@ const GameBoard = () => {
                     activateDestroyMode();
                     discardCard();
                     discardCard();
-                    setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellCard.uniqueId));
-                    setDiscardPile(prev => [...prev, spellCard]);
-                    return;
+                    break;
                 }
                 else {
                     alert('Not enough cards to make sacrifice')
@@ -216,9 +214,6 @@ const GameBoard = () => {
         // Remove the spell from hand and add to discard pile
         setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellCard.uniqueId));
         setDiscardPile(prev => [...prev, spellCard]);
-        
-        // Deduct action point for non-Critical Boost spells
-        setCurrentActionPoints(prev => prev - 1);
             
         if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
             switchTurn();
@@ -277,7 +272,7 @@ const GameBoard = () => {
             }
         }
     }
-    const discardCard = () => {
+    function discardCard() {
 
         const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
         const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
@@ -557,11 +552,9 @@ const GameBoard = () => {
         setCurrentActionPoints(prev => prev - 1);
         
         setDestroyMode(false);
-        
-        // Check if this was the last action point
-        if (currentActionPoints - 1 <= 0) {
-            switchTurn();
-        }
+
+        return;
+    
     };
     const pullFromOpponent = () => {
         if (!checkActionPoints()) return; // Check if player has action points
@@ -926,6 +919,7 @@ const GameBoard = () => {
                     </div>
                 )}
                 {/* Destroy Opponents Hero */}
+
                 {destroyMode && (
                         <div style={{ 
                             position: 'fixed', 
