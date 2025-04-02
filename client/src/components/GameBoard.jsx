@@ -37,6 +37,7 @@ const GameBoard = () => {
   const [turnMessage, setTurnMessage] = useState("");
   const [gameId, setGameId] = useState(null);
   const [opponentName, setOpponentName] = useState("");
+  const [actionPoints, setActionPoints] = useState(3); // Track action points
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -60,6 +61,7 @@ const GameBoard = () => {
       setTurnMessage(isFirstPlayer ? "Your turn!" : "Opponent's turn");
       setTimeLeft(60);
       setPlayerHand(getRandomCards());
+      setActionPoints(3); // Reset action points at the start of the game
     });
 
     socketRef.current.on("turn_update", ({ currentPlayerId }) => {
@@ -67,6 +69,7 @@ const GameBoard = () => {
       setIsMyTurn(currentPlayerId === socketRef.current.id);
       setTurnMessage(currentPlayerId === socketRef.current.id ? "Your turn!" : "Opponent's turn");
       setTimeLeft(60);
+      setActionPoints(3); // Reset action points at the start of each turn
     });
 
     socketRef.current.on("card_played", ({ slotIndex, card }) => {
@@ -118,22 +121,35 @@ const GameBoard = () => {
   };
 
   const checkActionPoints = () => {
-    // Implement action points check logic
+    if (actionPoints <= 0) {
+      alert("You have run out of action points!");
+      handleEndTurn(); // Automatically end turn if no action points
+      return false;
+    }
     return true;
   };
 
   const handleDrawCard = () => {
-    if (!isMyTurn || !checkActionPoints()) return;
+    if (!isMyTurn) {
+      alert("It's not your turn!");
+      return;
+    }
+    if (!checkActionPoints()) return;
     if (playerHand.length >= 8) {
       alert("You cannot have more than 8 cards in your hand!");
       return;
     }
     const randomCard = { ...cardList[Math.floor(Math.random() * cardList.length)], uniqueId: Date.now() };
     setPlayerHand((prevHand) => [...prevHand, randomCard]);
+    setActionPoints((prev) => prev - 1);
   };
 
   const handleDrop = (e, slotIndex) => {
-    if (!isMyTurn || !checkActionPoints()) return;
+    if (!isMyTurn) {
+      alert("It's not your turn!");
+      return;
+    }
+    if (!checkActionPoints()) return;
     e.preventDefault();
     const card = JSON.parse(e.dataTransfer.getData("card"));
     setPlayerHand((prev) => prev.filter((c) => c.id !== card.id));
@@ -143,12 +159,18 @@ const GameBoard = () => {
       return newPlayed;
     });
     socketRef.current.emit("card_played", { gameId, slotIndex, card });
+    setActionPoints((prev) => prev - 1);
   };
 
   const discardAllCards = () => {
-    if (!isMyTurn || !checkActionPoints()) return;
+    if (!isMyTurn) {
+      alert("It's not your turn!");
+      return;
+    }
+    if (!checkActionPoints()) return;
     setDiscardPile((prev) => [...prev, ...playerHand]);
     setPlayerHand(getRandomCards());
+    setActionPoints((prev) => prev - 2);
   };
 
   return (
@@ -162,7 +184,12 @@ const GameBoard = () => {
         </>
       ) : (
         <div style={styles.gameBoard}>
-          <div style={styles.playerNameContainer}>
+          <div
+            style={{
+              ...styles.playerNameContainer,
+              ...(isMyTurn ? styles.activePlayer : {}),
+            }}
+          >
             <h2 style={styles.playerNameText}>{playerName}</h2>
           </div>
           <Timer timeLeft={timeLeft} />
@@ -237,11 +264,16 @@ const GameBoard = () => {
             </button>
           </div>
           <div style={styles.actionPointsContainer}>
-            <h3 style={styles.actionPointsText}>Action Points: {/* Display action points here */}</h3>
+            <h3 style={styles.actionPointsText}>Action Points: {actionPoints}</h3>
           </div>
-          <button onClick={handleEndTurn} style={styles.endTurnButton}>
-            End Turn
-          </button>
+          {isMyTurn && (
+            <button
+              onClick={handleEndTurn}
+              style={styles.endTurnButton}
+            >
+              End Turn
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -273,6 +305,11 @@ const styles = {
     border: "2px solid #1B5E20",
     zIndex: 10,
     fontFamily: "'Roboto', sans-serif",
+    transition: "transform 0.3s ease-in-out", // Smooth transition for scaling
+  },
+  activePlayer: {
+    transform: "scale(1.2)", // Enlarge the container
+    animation: "pulse 1s infinite", // Add pulsing animation
   },
   playerNameText: {
     margin: 0,
@@ -318,6 +355,16 @@ const styles = {
     flexShrink: 0,
     maxWidth: "150px",
     maxHeight: "200px",
+  },
+  disabledButton: {
+    padding: "0.5vh 1vw",
+    fontSize: "0.8rem",
+    cursor: "not-allowed",
+    backgroundColor: "#ccc",
+    color: "#666",
+    border: "none",
+    borderRadius: "4px",
+    minWidth: "80px",
   },
   cardImage: {
     width: "100%",
@@ -398,5 +445,15 @@ const styles = {
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
   },
 };
+
+// Add CSS keyframes for the pulsing animation
+const styleSheet = document.styleSheets[0];
+const keyframes =
+  `@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }`;
+styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
 
 export default GameBoard;
