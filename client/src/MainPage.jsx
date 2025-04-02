@@ -12,9 +12,9 @@ function MainPage() {
 
   useEffect(() => {
     // Listen for match_found event from server
-    socket.on("match_found", (data) => {
+    socket.on("match_found", () => {
       setIsSearching(false); // Stop searching
-      navigate("/game", { state: { playerName, opponent: data.opponent } }); // Navigate with opponent info
+      navigate("/game", { state: { playerName } }); // Pass only playerName
     });
 
     return () => socket.off("match_found"); // Cleanup listener

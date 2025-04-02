@@ -23,3 +23,15 @@
     transition: opacity 0.3s ease;
     text-align: center;
 }
+
+.activeButton {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+
+.disableButton {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: not-allowed;
+}

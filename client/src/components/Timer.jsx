@@ -26,7 +26,7 @@ const Timer = ({ timeLeft }) => {
 const styles = {
     timerContainer: {
         position: "absolute",
-        top: "10px",
+        top: "100px",
         left: "10px",
         width: "80px",
         height: "80px",

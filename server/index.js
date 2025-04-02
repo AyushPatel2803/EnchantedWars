@@ -10,105 +10,188 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Adjust based on frontend port
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
 
-let waitingPlayer = null; // Stores the first player waiting for a match
-let gameSession = null; // Stores the current game session
-let turnTimer = null; // Stores the timer for the current turn
-const TURN_DURATION = 60000; // 60 seconds
+// Game management
+let waitingPlayer = null;
+let activeGames = new Map();
+let playerCount = 0;
 
-// WebSocket connection handling
+// Utility function to create a new game
+function createGame(player1, player2) {
+  const gameId = Math.random().toString(36).substring(7);
+  const gameState = {
+    id: gameId,
+    players: [player1, player2],
+    currentPlayerIndex: 0,
+    turnTimeLeft: 60,
+    isActive: true,
+    playedCards: {
+      [player1.id]: Array(5).fill(null),
+      [player2.id]: Array(5).fill(null)
+    }
+  };
+  activeGames.set(gameId, gameState);
+  return gameState;
+}
+
+// Utility function to log game state
+function logGameState(gameId) {
+  const game = activeGames.get(gameId);
+  if (game) {
+    console.log('\n=== Game State ===');
+    console.log(`Game ID: ${gameId}`);
+    console.log('Players:');
+    game.players.forEach((player, index) => {
+      console.log(`Player ${index + 1}. ${player.username} (${player.id})`);
+    });
+    console.log(`Current Turn: ${game.players[game.currentPlayerIndex].username}`);
+    console.log('================\n');
+  }
+}
+
 io.on("connection", (socket) => {
-  console.log(`Player connected: ${socket.id}`);
-
-  socket.on("card_played", ({ slotIndex, card, currentPlayer }) => {
-    console.log(`Player ${currentPlayer} played a card in slot ${slotIndex}`);
-    // Broadcast the card placement to all clients
-    socket.broadcast.emit("card_played", { slotIndex, card, currentPlayer });
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`Player disconnected: ${socket.id}`);
-  });
-
-  socket.emit("player_assigned", { playerId: socket.id });
+  playerCount++;
+  console.log("\n👤 New connection:", socket.id);
+  console.log("📊 Total players connected:", playerCount);
 
   socket.on("find_match", (username) => {
-    if (waitingPlayer) {
-      // Pair the two players
-      const opponent = waitingPlayer;
-      io.to(opponent.id).emit("match_found", { opponent: username });
-      io.to(socket.id).emit("match_found", { opponent: opponent.username });
+    console.log(`\n🔍 ${username} (${socket.id}) is searching for a match...`);
 
-      // Start the game session
-      gameSession = {
-        players: [
-          { id: opponent.id, username: opponent.username },
-          { id: socket.id, username },
-        ],
-        currentPlayerIndex: 0,
+    if (waitingPlayer) {
+      const player1 = {
+        id: waitingPlayer.id,
+        username: waitingPlayer.username,
       };
 
-      waitingPlayer = null; // Reset queue
-      startTurn();
+      const player2 = {
+        id: socket.id,
+        username: username,
+      };
+
+      // Create new game
+      const game = createGame(player1, player2);
+
+      // Add players to the game room
+      socket.join(game.id);
+      io.sockets.sockets.get(player1.id)?.join(game.id);
+
+      // Notify both players
+      io.to(player1.id).emit("match_found", {
+        opponent: player2.username,
+        gameId: game.id,
+        isFirstPlayer: true,
+      });
+
+      io.to(player2.id).emit("match_found", {
+        opponent: player1.username,
+        gameId: game.id,
+        isFirstPlayer: false,
+      });
+
+      // Start first player's turn
+      io.to(game.id).emit("turn_update", {
+        currentPlayerId: player1.id,
+        gameId: game.id,
+      });
+
+      waitingPlayer = null;
+      logGameState(game.id);
     } else {
-      waitingPlayer = { id: socket.id, username }; // Store the first player
+      waitingPlayer = {
+        id: socket.id,
+        username: username,
+      };
+      console.log(`⏳ ${username} added to waiting queue`);
     }
   });
 
-  socket.on("end_turn", ({ nextPlayer }) => {
-    console.log(`Switching to Player ${nextPlayer}`);
-    io.emit("turn_update", { nextPlayer }); // Notify all clients of the turn change
+  // Handle turn ending
+  socket.on("end_turn", () => {
+    for (let [gameId, game] of activeGames) {
+      const playerIndex = game.players.findIndex(p => p.id === socket.id);
+      
+      if (playerIndex !== -1 && playerIndex === game.currentPlayerIndex) {
+        // Switch to next player
+        game.currentPlayerIndex = (playerIndex + 1) % 2;
+        const nextPlayer = game.players[game.currentPlayerIndex];
+        
+        console.log(`\n🔄 Turn ended in game ${gameId}`);
+        console.log(`Next player: ${nextPlayer.username}`);
+
+        // Reset turn timer
+        game.turnTimeLeft = 60;
+
+        // Notify players about turn change
+        io.to(gameId).emit("turn_update", {
+          currentPlayerId: nextPlayer.id,
+          gameId: gameId
+        });
+
+        logGameState(gameId);
+        break;
+      }
+    }
   });
 
-  socket.on("card_played", ({ slotIndex, card, currentPlayer }) => {
-    console.log(`Player ${currentPlayer} played a card in slot ${slotIndex}`);
-    // Broadcast the card placement to all clients
-    socket.broadcast.emit("card_played", { slotIndex, card, currentPlayer });
+  // Handle card played
+  socket.on("card_played", ({ gameId, slotIndex, card }) => {
+    const game = activeGames.get(gameId);
+    if (game && game.players[game.currentPlayerIndex].id === socket.id) {
+      // Update game state
+      game.playedCards[socket.id][slotIndex] = card;
+      
+      // Broadcast card played to opponent
+      socket.to(gameId).emit("card_played", { 
+        slotIndex, 
+        card,
+        playerId: socket.id 
+      });
+      
+      console.log(`\n🃏 Card played in game ${gameId} by ${socket.id}`);
+      console.log(`Slot: ${slotIndex}, Card: ${card.name}`);
+    }
   });
 
   socket.on("disconnect", () => {
-    console.log(`Player disconnected: ${socket.id}`);
+    playerCount--;
+    console.log("\n👋 Player disconnected:", socket.id);
+    console.log("📊 Total players connected:", playerCount);
 
-    // Remove from queue if they were waiting
+    // Remove from waiting queue if applicable
     if (waitingPlayer && waitingPlayer.id === socket.id) {
+      console.log("❌ Removed from waiting queue:", waitingPlayer.username);
       waitingPlayer = null;
     }
 
-    // End the game session if a player disconnects
-    if (gameSession && gameSession.players.some(player => player.id === socket.id)) {
-      io.emit("game_end", { message: "A player has disconnected. Game over." });
-      gameSession = null;
-      clearTimeout(turnTimer);
-    }
+    // Handle active game disconnection
+    activeGames.forEach((game, gameId) => {
+      const disconnectedPlayer = game.players.find(p => p.id === socket.id);
+      if (disconnectedPlayer) {
+        console.log(`\n🚫 Game ${gameId} ended - ${disconnectedPlayer.username} disconnected`);
+        
+        // Notify other player
+        const otherPlayer = game.players.find(p => p.id !== socket.id);
+        if (otherPlayer) {
+          io.to(otherPlayer.id).emit("opponent_disconnected", {
+            message: `${disconnectedPlayer.username} has disconnected`
+          });
+        }
+
+        // Clean up game
+        game.isActive = false;
+        io.socketsLeave(gameId); // Remove all sockets from the game room
+        activeGames.delete(gameId);
+      }
+    });
   });
 });
 
-function startTurn() {
-  if (!gameSession) return;
-
-  const currentPlayer = gameSession.players[gameSession.currentPlayerIndex];
-  io.to(currentPlayer.id).emit("turn_start", { playerId: currentPlayer.id });
-
-  turnTimer = setTimeout(() => {
-    endTurn();
-  }, TURN_DURATION);
-}
-
-function endTurn() {
-  if (!gameSession) return;
-
-  clearTimeout(turnTimer);
-  gameSession.currentPlayerIndex = (gameSession.currentPlayerIndex + 1) % gameSession.players.length;
-  startTurn();
-}
-
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`\n🚀 Server running on port ${PORT}`);
+  console.log("Waiting for players to connect...");
 });
-
-
