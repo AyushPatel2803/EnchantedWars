@@ -4,20 +4,20 @@ import "./PartyLeaderSelection.css";
 import Chronomancer from "../assets/partyleader/Chronomancer.png";
 import MistressOfDarkness from "../assets/partyleader/MistressOfDarkness.png";
 import NatureGuardian from "../assets/partyleader/NatureGuardian.png";
-import TheSerpent from "../assets/partyleader/TheSerpent.png";
+import TheSerpent from "../assets/partyleader/SerpentCharmer.png";
 import TheSoulKeeper from "../assets/partyleader/TheSoulKeeper.png";
-import TheConcort from "../assets/partyleader/TheConcort.png";
+import TheConsort from "../assets/partyleader/TheConsort.png";
 
 const PartyLeaderSelection = ({ onLeaderSelect }) => {
     const [selectedLeader, setSelectedLeader] = useState(null);
 
     const partyLeaders = [
-        { id: 1, name: 'Chronomancer', image: Chronomancer, class: 'Time' },
-        { id: 2, name: 'Mistress Of Darkness', image: MistressOfDarkness, class: 'Dark' },
-        { id: 3, name: 'Nature Guardian', image: NatureGuardian, class: 'Druid' },
-        { id: 4, name: 'The Serpent', image: TheSerpent, class: 'Poison' },
-        { id: 5, name: 'The SoulKeeper', image: TheSoulKeeper, class: 'Soul' },
-        { id: 6, name: 'The Concort', image: TheConcort, class: 'Spirit' },
+        { id: 1, name: 'Chronomancer', image: Chronomancer, affinity: 'Future' },
+        { id: 2, name: 'Mistress Of Darkness', image: MistressOfDarkness, affinity: 'Dark' },
+        { id: 3, name: 'Nature Guardian', image: NatureGuardian, affinity: 'Druid' },
+        { id: 4, name: 'The Serpent', image: TheSerpent, affinity: 'Serpentine' },
+        { id: 5, name: 'The SoulKeeper', image: TheSoulKeeper, affinity: 'Undead' },
+        { id: 6, name: 'The Consort', image: TheConsort, affinity: 'Consort' },
         // Add other party leaders
     ];
 
