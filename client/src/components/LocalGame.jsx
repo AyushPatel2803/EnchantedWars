@@ -205,12 +205,12 @@ const GameBoard = () => {
                 break;
             }
             case 11: {
-                if (hasHero && currentHand.length - 3 > 0) {
+                if (hasHero && currentHand.length - 2 > 0) {
                     setCurrentHand(prevHand => prevHand.filter(c => c.uniqueId !== spellCard.uniqueId));
                     setDiscardPile(prev => [...prev, spellCard]);
+                    discardCard();
+                    discardCard();
                     activateDestroyMode();
-                    discardCard();
-                    discardCard();
                     return;
                 }
                 else {
