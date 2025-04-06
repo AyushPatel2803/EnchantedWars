@@ -20,6 +20,19 @@ import SpectreMask from "../assets/SpectreMask.png"
 import ChimeraMask from "../assets/ChimeraMask.png"
 import SerpentMask from "../assets/SerpentMask.png"
 import ConsortArmor from "../assets/ConsortHelmet.png"
+import BearCleaver from "../assets/BearCleaver.png"
+import Cerberus from "../assets/Cerberus.png"
+import Gargoyle from "../assets/Gargoyle.png"
+import Ghoul from "../assets/GhastlyGhoul.png"
+import Gorgon from "../assets/Gorgon.png"
+import MightyOak from "../assets/MightyOak.png"
+import Ragnarok from "../assets/Ragnarok.png"
+import TimeMachine from "../assets/TimeMachine.png"
+import TitaniumGiant from "../assets/TitaniumGiant.png"
+import Vampire from "../assets/Vampire.png"
+import WhiteMage from "../assets/WhiteMage.png"
+import WingedSerpent from "../assets/WingedSerpent.png"
+
 
 import dice1 from "../assets/dice1.png";
 import dice2 from "../assets/dice2.png";
@@ -31,9 +44,9 @@ import dice6 from "../assets/dice6.png";
 const GameBoard = () => {
     // Define your actual card data with types and affinities
     const cardList = [
-        { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid", min: 5, max: 7}, // Moose Druid has Druid affinity
-        { id: 2, image: DarkGoblin, type: "Hero", affinity: "Dark" , min: 0, max: 6}, // Dark Goblin has Dark affinity
-        { id: 3, image: DruidMask, type: "Item", affinity: "Druid" , min: 4, max: 10}, // Items and spells have no affinity
+        { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid", min: 4, max: 8}, 
+        { id: 2, image: DarkGoblin, type: "Hero", affinity: "Dark" , min: 0, max: 6}, 
+        { id: 3, image: DruidMask, type: "Item", affinity: "Druid"}, 
         { id: 4, image: DecoyDoll, type: "Item", affinity: null },
         { id: 5, image: CriticalBoost, type: "Spell", affinity: null },
         { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" , min: 0, max: 6},
@@ -47,6 +60,19 @@ const GameBoard = () => {
         { id: 14, image: ChimeraMask, type: "Item", affinity: "Dark"},
         { id: 15, image: SerpentMask, type: "Item", affinity: "Serpentine"},
         { id: 16, image: ConsortArmor, type: "Item", affinity: "Consort"},
+        { id: 17, image: Gorgon, type: "Hero", affinity: "Serpentine", min: 0, max: 0},
+        { id: 18, image: WingedSerpent, type: "Hero", affinity: "Serpentine", min: 0, max: 7},
+        { id: 19, image: Ragnarok, type: "Hero", affinity: "Consort" , min: 0, max: 6},
+        { id: 20, image: WhiteMage, type: "Hero", affinity: "Consort" , min: 0, max: 7},
+        { id: 21, image: TimeMachine, type: "Hero", affinity: "Cyborg", min: 0, max: 11},
+        { id: 22, image: TitaniumGiant, type: "Hero", affinity: "Cyborg", min: 0, max: 8},
+        { id: 23, image: MightyOak, type: "Hero", affinity: "Druid" , min: 0, max: 0},
+        { id: 24, image: BearCleaver, type: "Hero", affinity: "Druid" , min: 0, max: 8},
+        { id: 25, image: Cerberus, type: "Hero", affinity: "Dark" , min: 6, max: 8}, 
+        { id: 26, image: Gargoyle, type: "Hero", affinity: "Dark" , min: 0, max: 9}, 
+        { id: 27, image: Vampire, type: "Hero", affinity: "Undead" , min: 0, max: 6},
+        { id: 28, image: Ghoul, type: "Hero", affinity: "Undead" , min: 0, max: 10},
+
     ];
     // State Variables
     const handleMouseEnter = (card, slotIndex) => {
@@ -77,7 +103,7 @@ const GameBoard = () => {
     const [player2ActionPoints, setPlayer2ActionPoints] = useState(3); // Initial action points for player 2 (fixed typo)
     const [currentPlayer, setCurrentPlayer] = useState(1); // Initial player turn
     const [hoveredCard, setHoveredCard] = useState(null);
-    const [diceRolls, setDiceRolls] = useState({ first: null, second: null });
+    const [diceRolls, setDiceRolls] = useState({ first: null, second: null, bonus: null });
     const [hoveredSpell, setHoveredSpell] = useState(null);
     const [swapSpellActive, setSwapSpellActive] = useState(false);
     const [selectedOwnHero, setSelectedOwnHero] = useState(null);
@@ -85,33 +111,61 @@ const GameBoard = () => {
     const [destroyMode, setDestroyMode] = useState(false);
     const [selectingFromDeck, setSelectingFromDeck] = useState(false);
     const [topCards, setTopCards] = useState([]);
+    const [turnModifier, setTurnModifier] = useState(false);
     const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
     const hasHero = opponentPlayedCards.some(card => card && card.type === "Hero");
+    const [stealMode, setStealMode] = useState(false);
+    const [selectedOpponentCard, setSelectedOpponentCard] = useState(null);
 
-    function getBonus() {
+    function getBonus(slotIndex) {
         const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
-        // Count how many Hydras (id: 8) are in the current player's slots
-        const bonus = currentPlayedCards.filter(card => card && card.id === 8).length;
-        return bonus; // Returns 0, 1, 2, etc.
-    };
+        const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
+        let bonus = 0;
+    
+        // 1. Hydra Bonus 
+        currentPlayedCards.forEach(card => {
+            if (card?.id === 8) bonus += 1;
+        });
+    
+        // 2. Mighty Oak Adjacency 
+        if (slotIndex !== undefined) {
+            if (currentPlayedCards[slotIndex] && (currentPlayedCards[slotIndex - 1]?.id === 23)) {
+                bonus += 2;
+            }
+            if (currentPlayedCards[slotIndex] && (currentPlayedCards[slotIndex + 1]?.id === 23)) {
+                bonus += 2;
+            }
+        }
+    
+        // 3. Gorgon 
+        if (slotIndex !== undefined) {
+            if (currentPlayedCards[slotIndex] && opponentPlayedCards[slotIndex]?.id === 17) {
+                bonus -= 2;
+            }
+        }
+    
+        // 4. Turn Modifier
+        if (turnModifier) bonus += 3;
+    
+        return bonus;
+    }
 
     const heroEffect = (card, slotIndex) => {
         if (!card || (card.type !== "Hero")) return;
         
+        const bonus = getBonus(slotIndex);
+
         const currentActionPoints = currentPlayer === 1 ? player1ActionPoints : player2ActionPoints;
         const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
         const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
         const setCurrentPlayedCards = currentPlayer === 1 ? setPlayedCards1 : setPlayedCards2;
-        
-        // Get Hydra bonus based on count
-        const bonus = getBonus();
-        
-        // Perform hero-specific effect
+
+        // Rest of the function remains the same...
         const roll1 = Math.floor(Math.random() * 6) + 1;
         const roll2 = Math.floor(Math.random() * 6) + 1;
         
-        setDiceRolls({ first: roll1, second: roll2 });
-        // Calculate total roll with Hydra bonus
+        setDiceRolls({ first: roll1, second: roll2, bonus });
+        // Calculate total roll with bonus
         const totalRoll = roll1 + roll2 + bonus;
         
         switch(card.id) {
@@ -133,17 +187,17 @@ const GameBoard = () => {
                     alert(`${totalRoll} - Normal roll`);
                 }
                 break;
-            case 2:
+            case 2: // Dark Goblin
                 if (totalRoll >= card.max) {
                     pullFromOpponent()
                 }
                 break;
-            case 6:
+            case 6: // Lost Soul
                 if (totalRoll >= card.max) {
                     drawFromDiscard()
                 }
                 break;
-            case 7:
+            case 7: // Bullseye
                 if (totalRoll >= card.max) {
                     drawFromTopThree()
                     return;
@@ -161,6 +215,128 @@ const GameBoard = () => {
                 }
                 else {
                     alert(`${totalRoll} - Normal roll`);
+                }
+                break;
+            case 18: // Winged Serpent
+                if (totalRoll >= card.max) {
+                    const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+                    const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+                    
+                    // Create a temporary array to hold new cards
+                    const newCards = [...currentHand];
+                    
+                    // Draw until we have 7 cards
+                    while (newCards.length < 7) {
+                        const randomCard = { 
+                            ...cardList[Math.floor(Math.random() * cardList.length)], 
+                            uniqueId: Date.now() + newCards.length 
+                        };
+                        newCards.push(randomCard);
+                    }
+                    
+                    // Update state once with all new cards
+                    setCurrentHand(newCards);
+                    break;
+                }
+            case 19: // Ragnarok
+                if (totalRoll >= card.max) {
+                    setTurnModifier(true)
+                }
+                break;
+            case 20: //White Mage
+                drawLastDiscardedHero()
+                break;
+            case 21: // Time Machine
+                if (totalRoll >= card.max) {
+                    // Discard all played Heroes (both players)
+                    const allPlayedHeroes = [...playedCards1, ...playedCards2]
+                        .filter(card => card?.type === "Hero");
+
+                    if (allPlayedHeroes.length === 0) {
+                        alert("No Heroes on the field to discard!");
+                        break;
+                    }
+
+                    // Add all Heroes to discard pile
+                    setDiscardPile(prev => [...prev, ...allPlayedHeroes]);
+
+                    // Clear all Hero slots
+                    setPlayedCards1(prev => prev.map(card => card?.type === "Hero" ? null : card));
+                    setPlayedCards2(prev => prev.map(card => card?.type === "Hero" ? null : card));
+
+                    alert("Time Machine activated! All Heroes have been discarded.");
+                }
+                break;
+            case 22: // Titanium Giant
+                if (totalRoll >= card.max) {
+                    // Check hand size first
+                    const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+                    if (currentHand.length >= 7) { // Because we're adding 2 cards
+                        alert('Your hand is too full to draw 2 cards!');
+                        return;
+                    }
+                    
+                    // Draw two cards
+                    const card1 = drawCardwithAffinity();
+                    const card2 = drawCardwithAffinity();
+                    
+                    // Check if either card is a spell
+                    if (card1 === "Cyborg" || card2 === "Cyborg") {
+                        activateDestroyMode();
+                        return
+                    }
+                }
+                break;
+            case 24: 
+                if (totalRoll >= card.max) {
+                    // Check hand size first
+                    const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+                    if (currentHand.length >= 7) { // Because we're adding 2 cards
+                        alert('Your hand is too full to draw 2 cards!');
+                        return;
+                    }
+                    
+                    // Draw two cards
+                    const card1 = drawCardwithType();
+                    const card2 = drawCardwithType();
+                    
+                    // Check if either card is a spell
+                    if (card1 === "Spell" || card2 === "Spell") {
+                        activateDestroyMode();
+                        return;
+                    }
+                }
+                break;
+            case 25:
+                if (totalRoll >= card.max) {
+                    destroyOpponentsMods();
+                }
+                else if (totalRoll <= card.min) {
+                    destroyUserMods();
+                }
+                break
+            case 26:
+                if (totalRoll >= card.max) {
+                    forceOpponentDiscardHeroes()
+                }
+                break;
+            case 27:
+                if (totalRoll >= card.max) {
+                const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+                    if (currentHand.length >= 7) { // Because we're adding 2 cards
+                        alert('Your hand is too full to draw 2 cards!');
+                        return;
+                    }
+                    
+                    // Draw two cards
+                    const card1 = drawCardwithType();
+                    const card2 = drawCardwithType();
+                }
+                break;
+            case 28:
+                if (totalRoll >= card.max) {
+                    activateStealMode();
+                    return
                 }
                 break;
             default:
@@ -233,6 +409,7 @@ const GameBoard = () => {
             switchTurn();
         }
     };
+
     
     // Function to check action points and switch turn if necessary
     function checkActionPoints() {
@@ -306,6 +483,85 @@ const GameBoard = () => {
         setDiscardPile(prev => [...prev, cardToDiscard]);
     };
     // Function to handle drawing a card
+    function drawCardwithType() {
+    const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+    const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+
+    // Check if the current player's hand already has 8 cards
+    if (currentHand.length >= 8) {
+        alert("You cannot have more than 8 cards in your hand!");
+        return null; // Return null to indicate failure
+    }
+
+    const randomCard = { 
+        ...cardList[Math.floor(Math.random() * cardList.length)], 
+        uniqueId: Date.now() + Math.random() // More unique identifier
+    };
+
+    // Add the random card to the current player's hand
+    setCurrentHand((prevHand) => [...prevHand, randomCard]);
+
+    return randomCard.type;
+    };
+    const destroyUserMods = () => {
+        const currentPlayedCards = currentPlayer === 1 ? [...playedCards1] : [...playedCards2];
+        const setCurrentPlayedCards = currentPlayer === 1 ? setPlayedCards1 : setPlayedCards2;
+        let destroyedAny = false;
+    
+        const newPlayedCards = currentPlayedCards.map(card => {
+            if (card && card.type === "Hero" && card.min === 0 && card.max === 0) {
+                setDiscardPile(prev => [...prev, card]);
+                destroyedAny = true;
+                return null;
+            }
+            return card;
+        });
+    
+        if (destroyedAny) {
+            setCurrentPlayedCards(newPlayedCards);
+        } 
+    };
+    
+    const destroyOpponentsMods = () => {
+        const opponentPlayedCards = currentPlayer === 1 ? [...playedCards2] : [...playedCards1];
+        const setOpponentPlayedCards = currentPlayer === 1 ? setPlayedCards2 : setPlayedCards1;
+        let destroyedAny = false;
+    
+        const newPlayedCards = opponentPlayedCards.map(card => {
+            if (card && card.type === "Hero" && card.min === 0 && card.max === 0) {
+                setDiscardPile(prev => [...prev, card]);
+                destroyedAny = true;
+                return null;
+            }
+            return card;
+        });
+    
+        if (destroyedAny) {
+            setOpponentPlayedCards(newPlayedCards);
+        } 
+    };
+
+    function drawCardwithAffinity() {
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+
+        // Check if the current player's hand already has 8 cards
+        if (currentHand.length >= 8) {
+            alert("You cannot have more than 8 cards in your hand!");
+            return null; // Return null to indicate failure
+        }
+
+        const randomCard = { 
+            ...cardList[Math.floor(Math.random() * cardList.length)], 
+            uniqueId: Date.now() + Math.random() // More unique identifier
+        };
+
+        // Add the random card to the current player's hand
+        setCurrentHand((prevHand) => [...prevHand, randomCard]);
+
+        return randomCard.affinity;
+    };
+
     const handleDrawCard = () => {
         if (!checkActionPoints()) return; // Check action points before proceeding
 
@@ -473,6 +729,7 @@ const GameBoard = () => {
 
     // Function to switch to the next player's turn
     const switchTurn = () => {
+        setTurnModifier(false)
         setCurrentPlayer((prev) => (prev === 1 ? 2 : 1));
         // Reset action points for the next player
         setPlayer1ActionPoints(3);
@@ -515,6 +772,30 @@ const GameBoard = () => {
             return;
         }
         setDestroyMode(true);
+    };
+    const forceOpponentDiscardHeroes = () => {
+        // Determine opponent's hand based on current player
+        const opponentHand = currentPlayer === 1 ? [...player2Hand] : [...player1Hand];
+        const setOpponentHand = currentPlayer === 1 ? setPlayer2Hand : setPlayer1Hand;
+        
+        // Filter out Hero cards
+        const heroesDiscarded = opponentHand.filter(card => card.type === "Hero");
+        const remainingCards = opponentHand.filter(card => card.type !== "Hero");
+        
+        if (heroesDiscarded.length > 0) {
+            // Update opponent's hand
+            setOpponentHand(remainingCards);
+            
+            // Add discarded Heroes to discard pile
+            setDiscardPile(prev => [...prev, ...heroesDiscarded]);
+            
+            alert(`Opponent discarded ${heroesDiscarded.length} Hero card(s)!`);
+        } else {
+            alert("Opponent had no Hero cards to discard!");
+        }
+        
+        // Return number of cards discarded (could be useful)
+        return heroesDiscarded.length;
     };
 
     const destroyOpponentHero = (slotIndex) => {
@@ -561,18 +842,109 @@ const GameBoard = () => {
                 return newPlayed;
             });
         }
-        
+        setDestroyMode(false);
         // Deduct action point only after successful destruction
         setCurrentActionPoints(prev => prev - 1);
-        
-        setDestroyMode(false);
 
         if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
             switchTurn();
         }
 
-        return;
+    };
+    const activateStealMode = () => {
+        if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) < 1) {
+            return;
+        }
+        setStealMode(true);
+        setSelectedOpponentHero(null);
+    };
     
+    const stealOpponentHero = () => {
+        if (selectedOpponentHero === null) return;
+    
+        const opponentPlayedCards = currentPlayer === 1 ? playedCards2 : playedCards1;
+        const setOpponentPlayedCards = currentPlayer === 1 ? setPlayedCards2 : setPlayedCards1;
+        const setCurrentPlayedCards = currentPlayer === 1 ? setPlayedCards1 : setPlayedCards2;
+    
+        // Find first empty slot in current player's area
+        const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
+        const emptySlotIndex = currentPlayedCards.findIndex(card => card === null);
+    
+        if (emptySlotIndex === -1) {
+            alert("No empty slot to place stolen hero!");
+            return;
+        }
+    
+        // Perform the steal
+        const stolenHero = opponentPlayedCards[selectedOpponentHero];
+        
+        setOpponentPlayedCards(prev => {
+            const newCards = [...prev];
+            newCards[selectedOpponentHero] = null;
+            return newCards;
+        });
+    
+        setCurrentPlayedCards(prev => {
+            const newCards = [...prev];
+            newCards[emptySlotIndex] = stolenHero;
+            return newCards;
+        });
+    
+        // Deduct action points
+        currentPlayer === 1 
+            ? setPlayer1ActionPoints(prev => prev - 1)
+            : setPlayer2ActionPoints(prev => prev - 1);
+    
+        setStealMode(false);
+        alert(`Stolen ${stolenHero.id} placed in slot ${emptySlotIndex + 1}!`);
+    };
+    const drawLastDiscardedHero = () => {
+        const currentHand = currentPlayer === 1 ? player1Hand : player2Hand;
+        const setCurrentHand = currentPlayer === 1 ? setPlayer1Hand : setPlayer2Hand;
+        const setCurrentActionPoints = currentPlayer === 1 ? setPlayer1ActionPoints : setPlayer2ActionPoints;
+    
+        // Check if hand is full
+        if (currentHand.length >= 8) {
+            alert("Your hand is full (max 8 cards)!");
+            return;
+        }
+    
+        // Find the last discarded Hero (search from the end of the discard pile)
+        let lastHeroIndex = -1;
+        for (let i = discardPile.length - 1; i >= 0; i--) {
+            if (discardPile[i].type === "Hero") {
+                lastHeroIndex = i;
+                break;
+            }
+        }
+    
+        if (lastHeroIndex === -1) {
+            alert("No Hero cards in discard pile!");
+            return;
+        }
+    
+        // Get the last discarded Hero
+        const lastHero = discardPile[lastHeroIndex];
+    
+        // Add to hand with new unique ID
+        setCurrentHand(prev => [...prev, {
+            ...lastHero,
+            uniqueId: Date.now() // Assign new unique ID
+        }]);
+    
+        // Remove from discard pile
+        setDiscardPile(prev => [
+            ...prev.slice(0, lastHeroIndex),
+            ...prev.slice(lastHeroIndex + 1)
+        ]);
+    
+        // Deduct action point
+        setCurrentActionPoints(prev => prev - 1);
+    
+        // Check if turn should switch
+        if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
+            switchTurn();
+        }
     };
     const pullFromOpponent = () => {
         if (!checkActionPoints()) return; // Check if player has action points
@@ -703,8 +1075,8 @@ const GameBoard = () => {
                         style={styles.slot}
                         onDragOver={handleDragOver}
                         onDrop={(e) => currentPlayer === 2 && handleDrop(e, index)}
-                        onMouseEnter={() => currentPlayer === 2 && handleMouseEnter(card, index)}
-                        onMouseLeave={currentPlayer === 2 ? handleMouseLeave : undefined}
+                        onMouseEnter={() => currentPlayer === 2 && card?.type === "Hero" && card.max !== 0 && setHoveredCard({ card, slotIndex: index })}
+                        onMouseLeave={() => currentPlayer === 2 && setHoveredCard(null)}
                     >
                         {card ? (
                             <div style={styles.card}>
@@ -722,7 +1094,10 @@ const GameBoard = () => {
                                             onClick={() => heroEffect(card, index)} 
                                             style={styles.heroEffectButton}
                                         >
-                                            Hero Roll
+                                            Hero Roll 
+                                            <span style={{ color: getBonus(index) < 0 ? '#ff4444' : '#ffffff' }}>
+                                                ({getBonus(index) > 0 ? `+${getBonus(index)}` : getBonus(index)})
+                                            </span>
                                         </button>
                                     </div>
                                 )}
@@ -742,8 +1117,8 @@ const GameBoard = () => {
                         style={styles.slot}
                         onDragOver={handleDragOver}
                         onDrop={(e) => currentPlayer === 1 && handleDrop(e, index)}
-                        onMouseEnter={() => currentPlayer === 1 && handleMouseEnter(card, index)}
-                        onMouseLeave={currentPlayer === 1 ? handleMouseLeave : undefined}
+                        onMouseEnter={() => currentPlayer === 1 && card?.type === "Hero" && card.max !== 0 && setHoveredCard({ card, slotIndex: index })}
+                        onMouseLeave={() => currentPlayer === 1 && setHoveredCard(null)}
                     >
                         {card ? (
                             <div style={styles.card}>
@@ -761,7 +1136,10 @@ const GameBoard = () => {
                                             onClick={() => heroEffect(card, index)} 
                                             style={styles.heroEffectButton}
                                         >
-                                            Hero Roll
+                                            Hero Roll 
+                                            <span style={{ color: getBonus(index) < 0 ? '#ff4444' : '#ffffff' }}>
+                                                ({getBonus(index) > 0 ? `+${getBonus(index)}` : getBonus(index)})
+                                            </span>
                                         </button>
                                     </div>
                                 )}
@@ -851,7 +1229,6 @@ const GameBoard = () => {
                     )}
                 </div>
             </div>
-            {/* Add this near your other UI elements */}
                 {swapSpellActive && (
                     <div style={{ 
                         position: 'fixed', 
@@ -936,6 +1313,99 @@ const GameBoard = () => {
                         </button>
                     </div>
                 )}
+                    {stealMode && (
+                        <div style={{ 
+                            position: 'fixed', 
+                            top: 0, 
+                            left: 0, 
+                            right: 0, 
+                            bottom: 0, 
+                            backgroundColor: 'rgba(0,0,0,0.7)', 
+                            zIndex: 99,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white'
+                        }}>
+                            <h2>Click an opponent Hero to steal it</h2>
+                            <div style={styles.playArea}>
+                                {(currentPlayer === 1 ? playedCards2 : playedCards1).map((card, index) => (
+                                    <div
+                                        key={`steal-opponent-${index}`}
+                                        style={{
+                                            ...styles.slot,
+                                            border: card && card.type === "Hero" ? '4px solid red' : '2px dashed #ccc',
+                                            cursor: card && card.type === "Hero" ? 'pointer' : 'default'
+                                        }}
+                                        onClick={() => {
+                                            if (card && card.type === "Hero") {
+                                                // Find first empty slot in current player's area
+                                                const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
+                                                const emptySlotIndex = currentPlayedCards.findIndex(card => card === null);
+                                                
+                                                if (emptySlotIndex === -1) {
+                                                    alert("No empty slot to place stolen hero!");
+                                                    return;
+                                                }
+                                                
+                                                // Perform the steal
+                                                if (currentPlayer === 1) {
+                                                    // Player 1 stealing from Player 2
+                                                    setPlayedCards2(prev => {
+                                                        const newCards = [...prev];
+                                                        newCards[index] = null;
+                                                        return newCards;
+                                                    });
+                                                    setPlayedCards1(prev => {
+                                                        const newCards = [...prev];
+                                                        newCards[emptySlotIndex] = card;
+                                                        return newCards;
+                                                    });
+                                                } else {
+                                                    // Player 2 stealing from Player 1
+                                                    setPlayedCards1(prev => {
+                                                        const newCards = [...prev];
+                                                        newCards[index] = null;
+                                                        return newCards;
+                                                    });
+                                                    setPlayedCards2(prev => {
+                                                        const newCards = [...prev];
+                                                        newCards[emptySlotIndex] = card;
+                                                        return newCards;
+                                                    });
+                                                }
+                                                
+                                                // Deduct action points
+                                                currentPlayer === 1 
+                                                    ? setPlayer1ActionPoints(prev => prev - 1)
+                                                    : setPlayer2ActionPoints(prev => prev - 1);
+                                                
+                                                setStealMode(false);
+                                                
+                                                if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
+                                                    switchTurn();
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        {card && (
+                                            <div style={styles.card}>
+                                                <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                                                {card.items?.length > 0 && (
+                                                    <div style={styles.items}>
+                                                        {card.items.map((item, itemIndex) => (
+                                                            <img key={`steal-item-${itemIndex}`} src={item.image} alt={`Item ${item.id}`} style={styles.itemImage} />
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 {/* Destroy Opponents Hero */}
 
                 {destroyMode && (
@@ -1140,6 +1610,9 @@ const styles = {
         border: 'none',
         borderRadius: '5px',
         whiteSpace: 'nowrap',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px',
     },
     diceContainer: {
         display: 'flex',
@@ -1239,6 +1712,46 @@ const styles = {
         border: 'none',
         borderRadius: '5px',
         margin: '0 10px'
+    },
+    bonusDisplay: {
+        color: 'white',
+        fontSize: '36px',
+        font: 'Luminari'
+    },
+    stealModal: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        zIndex: 100,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white'
+    },
+    stealButtons: {
+        display: 'flex',
+        gap: '20px',
+        marginTop: '20px'
+    },
+    confirmButton: {
+        padding: '10px 20px',
+        backgroundColor: '#4CAF50',
+        color: 'white',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer'
+    },
+    cancelButton: {
+        padding: '10px 20px',
+        backgroundColor: '#f44336',
+        color: 'white',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer'
     }
 };
 
