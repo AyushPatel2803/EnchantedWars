@@ -27,7 +27,7 @@ const PartyLeaderSelection = ({ onLeaderSelect }) => {
 
     const confirmSelection = () => {
         if (selectedLeader) {
-            onLeaderSelect(selectedLeader); // This will now work correctly
+            onLeaderSelect(selectedLeader);
         }
     };
 

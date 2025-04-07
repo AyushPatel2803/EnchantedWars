@@ -156,43 +156,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Handle card destruction
-  socket.on("destroy_card", ({ gameId, playerId, slotIndex }) => {
-    const game = activeGames.get(gameId);
-    if (!game) {
-      console.error(`Game not found: ${gameId}`);
-      return;
-    }
-
-    // Find the opponent's ID
-    const opponentId = game.players.find(p => p.id !== playerId).id;
-
-    // Update the game state to remove the card
-    game.playedCards[opponentId][slotIndex] = null;
-
-    // Notify both players about the card destruction
-    io.to(gameId).emit("card_destroyed", { slotIndex, playerId: opponentId });
-
-    console.log(`Card in slot ${slotIndex} destroyed for player ${opponentId} in game ${gameId}`);
-  });
-
-
-  socket.on("player_won", ({ gameId, playerId }) => {
-    const game = activeGames.get(gameId);
-
-    if (!game) {
-      console.error(`Game not found: ${gameId}`);
-      return;
-    }
-
-    // Broadcast the win to both players
-    io.to(gameId).emit("game_over", { winner: playerId });
-    console.log(`Player ${playerId} won the game in game ${gameId}`);
-
-    // Optionally, clean up the game
-    activeGames.delete(gameId);
-  });
-
   socket.on("disconnect", () => {
     playerCount--;
     console.log("\n👋 Player disconnected:", socket.id);
