@@ -42,6 +42,8 @@ import dice5 from "../assets/dice5.png";
 import dice6 from "../assets/dice6.png";
 
 const GameBoard = () => {
+const [hoveredCardId, setHoveredCardId] = useState(null);
+
     // Define your actual card data with types and affinities
     const cardList = [
         { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid", min: 4, max: 8}, 
@@ -1062,11 +1064,13 @@ const GameBoard = () => {
     const lastDiscardedCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null;
 
     return (
+
+        <div style={{ width: "100vw", height: "100vh", overflow: "hidden", margin: 0, padding: 0 }}>
         <div style={styles.gameBoard}>
             <Timer />
             <ActionPoints points={currentPlayer === 1 ? player1ActionPoints : player2ActionPoints} />
             <DrawCard onClick={handleDrawCard} />
-    
+
             {/* Player 2 Card Slots */}
             <div style={styles.playArea}>
                 {playedCards2.map((card, index) => (
@@ -1108,7 +1112,7 @@ const GameBoard = () => {
                     </div>
                 ))}
             </div>
-    
+
             {/* Player 1 Card Slots */}
             <div style={styles.playArea}>
                 {playedCards1.map((card, index) => (
@@ -1150,32 +1154,72 @@ const GameBoard = () => {
                     </div>
                 ))}
             </div>
-            {/* Player Hand */}
-            <h2>Player {currentPlayer} Hand</h2>
-                <div style={styles.hand}>
-                    {(currentPlayer === 1 ? player1Hand : player2Hand).map((card) => (
-                        <div 
-                            key={`hand-${card.uniqueId}`}
-                            draggable 
-                            onDragStart={(e) => handleDragStart(e, card)} 
-                            style={styles.card}
-                            onMouseEnter={() => card.type === "Spell" && setHoveredSpell(card)}
-                            onMouseLeave={() => card.type === "Spell" && setHoveredSpell(null)}
-                        >
-                            <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
-                            {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
-                                <div style={styles.spellEffectContainer}>
-                                    <button 
-                                        onClick={() => castSpell(card)} 
-                                        style={styles.spellEffectButton}
-                                    >
-                                        Cast Spell
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+            
+{/* Player Hand Section */}
+
+<h2 style={{ textAlign: "center" }}>Player {currentPlayer} Hand</h2>
+<div
+  style={{
+    position: "relative",
+    width: "600px",
+    height: "250px",
+    margin: "0 auto",
+    marginBottom: "40px" // Adjust this value for extra space below if needed
+  }}
+>
+  {(currentPlayer === 1 ? player1Hand : player2Hand).map((card, i, arr) => {
+    const middleIndex = (arr.length - 1) / 2;
+    const rotation = (i - middleIndex) * 25;
+    const offsetX = (i - middleIndex) * 30 + 220;
+    const offsetY = 10;
+    const isHovered = hoveredCardId === card.uniqueId;
+    return (
+      <div
+        key={`hand-${card.uniqueId}`}
+        draggable
+        onDragStart={(e) => handleDragStart(e, card)}
+        onMouseEnter={() => {
+          setHoveredCardId(card.uniqueId);
+          if (card.type === "Spell") {
+            setHoveredSpell(card);
+          }
+        }}
+        onMouseLeave={() => {
+          setHoveredCardId(null);
+          if (card.type === "Spell") {
+            setHoveredSpell(null);
+          }
+        }}
+        style={{
+          position: "absolute",
+          width: "150px",
+          height: "200px",
+          border: "2px solid #888",
+          borderRadius: "10px",
+          overflow: "hidden",
+          cursor: "grab",
+          transition: "transform 0.2s ease",
+          transform: `translate(${offsetX}px, ${offsetY}px) rotate(${rotation}deg) scale(${isHovered ? 1.1 : 1})`,
+          transformOrigin: "bottom center"
+        }}
+      >
+        <img
+          src={card.image}
+          alt={`Card ${card.id}`}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+        {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
+          <div style={styles.spellEffectContainer}>
+            <button onClick={() => castSpell(card)} style={styles.spellEffectButton}>
+              Cast Spell
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  })}
+</div>
+
             {/* Discard Pile and Discard Button */}
             <div style={styles.discardContainer}>
                 <div style={styles.discardPile}>
@@ -1482,7 +1526,10 @@ const GameBoard = () => {
                 )}
         </div>
         
+    </div>
+
     );
+
 };
 
 // Styles

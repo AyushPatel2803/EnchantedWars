@@ -1,3 +1,10 @@
+@font-face {
+  font-family: "GreenFuz";
+  src: url("/fonts/GreenFuzRegular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

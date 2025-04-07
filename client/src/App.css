@@ -36,3 +36,10 @@
     transform: rotate(360deg);
   }
 }
+
+@font-face {
+  font-family: "GreenFuz";
+  src: url("/fonts/GreenFuzRegular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
