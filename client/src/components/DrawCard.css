@@ -12,36 +12,26 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     position: absolute;
-    top: 37.5%;
+    top: 40%; /* Adjusted from 50% to 60% to move it lower */
 }
 .card:hover {
     transform: scale(1.1);
 }
 
- .card-content {
+.card-content {
     opacity: 0;
     transition: opacity 0.3s ease;
     text-align: center;
-
 }
 
-/*.card-hovered {
-    transform: scale(1.1);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+.activeButton {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
 }
 
-.card.clicked {
-    animation: clickAnimation 0.3s ease;
-  }
-  
-  @keyframes clickAnimation {
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(0.95);
-    }
-    100% {
-      transform: scale(1);
-    }
-  } */
+.disableButton {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: not-allowed;
+}

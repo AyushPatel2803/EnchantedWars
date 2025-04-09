@@ -1,69 +1,52 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
-const Timer = ({ onTimeout }) => {
-  // Start at 1 second
-  const [time, setTime] = useState(1);
+const Timer = ({ timeLeft }) => {
+    const [isAnimating, setIsAnimating] = useState(false);
 
-  useEffect(() => {
-    // When time reaches 60, trigger onTimeout and reset timer to 1
-    if (time >= 60) {
-      if (onTimeout) {
-        onTimeout();
-      }
-      setTime(1);
-      return;
-    }
-    // Otherwise, set a timeout to increment time by 1 every second
-    const timeoutId = setTimeout(() => {
-      setTime(time + 1);
-    }, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [time, onTimeout]);
+    useEffect(() => {
+        if (timeLeft === 10) {
+            setIsAnimating(true); // Trigger animation
+            setTimeout(() => setIsAnimating(false), 1000); // Reset animation after 1 second
+        }
+    }, [timeLeft]);
 
-  return (
-    <div style={StyleSheet.timer}>
-      <h2>Time: {time}s</h2>
-    </div>
-  );
+    return (
+        <div
+            style={{
+                ...styles.timerContainer,
+                backgroundColor: timeLeft <= 10 ? "#FF0000" : "#4CAF50", // Change to red when <= 10 seconds
+                animation: isAnimating ? "shake 0.5s ease" : "none", // Apply animation
+            }}
+        >
+            <h2 style={styles.timerText}>{timeLeft}s</h2>
+        </div>
+    );
 };
 
-const StyleSheet = {
-  timer: {
-    position: "absolute",
-    left: "20px",
-    top: "15%",
-    transform: "translateY(-50%)",
-    width: "160px",
-    height: "60px",
-
-    /* Subtle arcane swirl in greenish-teal tones */
-    background: "radial-gradient(circle at center, rgba(88,173,136,0.3), rgba(22,44,36,0))",
-
-    /* A teal border to match the swirl */
-    border: "2px solid #58ad88",
-    borderRadius: "12px",
-
-    /* Soft parchment-like text color */
-    color: "#daf7e2",
-    fontSize: "25px",
-
-    /* Use a more fantasy-like font (make sure it's loaded) */
-    fontFamily: "GreenFuz, sans-serif",
-
-    /* Center the text and apply a mild glow */
-    textAlign: "center",
-    textShadow: "0 0 4px #58ad88",
-    boxShadow: "0 0 10px rgba(88,173,136,0.4)",
-
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-
-    /* Gentle arcane glow animation */
-    animation: "arcaneGlow 3s ease-in-out infinite alternate",
-    zIndex: 9999, // Ensure it stays on top
-  },
+const styles = {
+    timerContainer: {
+        position: "absolute",
+        top: "100px",
+        left: "10px",
+        width: "80px",
+        height: "80px",
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+        color: "white",
+        fontSize: "18px",
+        fontWeight: "bold",
+        border: "3px solid #1B5E20",
+        transition: "background-color 0.3s ease",
+    },
+    timerText: {
+        margin: 0,
+        fontSize: "20px",
+        fontWeight: "bold",
+        fontFamily: "'Roboto', sans-serif",
+    },
 };
-
 
 export default Timer;

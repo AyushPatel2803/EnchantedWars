@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import Timer from "./Timer";
+import Timer from "./LocalTimer";
 import ActionPoints from "./ActionPoints";
 import DrawCard from "./DrawCard";
-import "./GameBoard.css";
 // Import Card Images
 import MooseDruid from "../assets/MooseDruid.png";
 import DarkGoblin from "../assets/DarkGoblin.png";
@@ -730,13 +729,14 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
     };
 
     // Function to switch to the next player's turn
-    const switchTurn = () => {
-        setTurnModifier(false)
-        setCurrentPlayer((prev) => (prev === 1 ? 2 : 1));
-        // Reset action points for the next player
-        setPlayer1ActionPoints(3);
-        setPlayer2ActionPoints(3);
-    };
+
+// Modify switchTurn function to ensure it's working correctly
+const switchTurn = () => {
+  setTurnModifier(false);
+  setCurrentPlayer(prev => (prev === 1 ? 2 : 1));
+  setPlayer1ActionPoints(3);
+  setPlayer2ActionPoints(3);
+};
 
     const activateSwapSpell = () => {
         setSwapSpellActive(true);
@@ -1065,11 +1065,11 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
 
     return (
 
-        <div style={{ width: "100vw", height: "100vh", overflow: "hidden", margin: 0, padding: 0 }}>
+        <div style={{ width: "100vw", height: "120vh", overflow: "hidden", margin: 0, padding: 0 }}>
         <div style={styles.gameBoard}>
-            <Timer />
+            <Timer currentPlayer={currentPlayer} onTimeOut={switchTurn} />
             <ActionPoints points={currentPlayer === 1 ? player1ActionPoints : player2ActionPoints} />
-            <DrawCard onClick={handleDrawCard} />
+            <DrawCard onDrawCard={handleDrawCard} />
 
             {/* Player 2 Card Slots */}
             <div style={styles.playArea}>
@@ -1540,7 +1540,7 @@ const styles = {
         padding: "20px",
         border: "4px solid black",
         background: "#162C24",
-        height: "920px",
+        height: "960px",
     },
     playerName: {
         position: "absolute",

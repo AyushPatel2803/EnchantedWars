@@ -12,7 +12,7 @@ const styles = {
     container: {
       position: "absolute",
       left: "20px",
-      bottom: "10%",
+      bottom: "5%",
       // Let width auto-fit the text
       width: "auto",
       padding: "10px 20px",

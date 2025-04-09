@@ -1,15 +1,17 @@
-@keyframes arcaneGlow {
-    0% {
-      filter: brightness(1);
-      box-shadow: 0 0 10px rgba(88,173,136,0.4);
-    }
-    50% {
-      filter: brightness(1.2);
-      box-shadow: 0 0 20px rgba(88,173,136,0.8);
-    }
-    100% {
-      filter: brightness(1);
-      box-shadow: 0 0 10px rgba(88,173,136,0.4);
-    }
-  }
-  
+/* GameBoard.css */
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.game-board-container {
+    height: 100vh;
+    width: 100vw;
+    overflow: auto;
+}
