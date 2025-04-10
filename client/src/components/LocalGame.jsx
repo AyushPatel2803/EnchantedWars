@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import Timer from "./LocalTimer";
+import React, { useState, useEffect } from "react";
 import ActionPoints from "./ActionPoints";
 import DrawCard from "./DrawCard";
 // Import Card Images
@@ -117,6 +116,27 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
     const hasHero = opponentPlayedCards.some(card => card && card.type === "Hero");
     const [stealMode, setStealMode] = useState(false);
     const [selectedOpponentCard, setSelectedOpponentCard] = useState(null);
+    const [timer, setTimer] = useState(60); // 60 seconds
+    const [timerActive, setTimerActive] = useState(true);
+
+    useEffect(() => {
+        let interval;
+        
+        if (timerActive && timer > 0) {
+            interval = setInterval(() => {
+                setTimer(prev => prev - 1);
+            }, 1000);
+        } else if (timer <= 0) {
+            switchTurn();
+            setTimer(60); // Reset timer for next player
+        }
+        
+        return () => clearInterval(interval);
+    }, [timer, timerActive]);
+
+    useEffect(() => {
+        setTimer(60); // Reset timer when player changes
+    }, [currentPlayer]);
 
     function getBonus(slotIndex) {
         const currentPlayedCards = currentPlayer === 1 ? playedCards1 : playedCards2;
@@ -729,22 +749,22 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
     };
 
     // Function to switch to the next player's turn
-
-// Modify switchTurn function to ensure it's working correctly
-const switchTurn = () => {
-  setTurnModifier(false);
-  setCurrentPlayer(prev => (prev === 1 ? 2 : 1));
-  setPlayer1ActionPoints(3);
-  setPlayer2ActionPoints(3);
-};
+    const switchTurn = () => {
+        setTurnModifier(false);
+        setCurrentPlayer(prev => (prev === 1 ? 2 : 1));
+        setPlayer1ActionPoints(3);
+        setPlayer2ActionPoints(3);
+    };
 
     const activateSwapSpell = () => {
+        setTimerActive(false);
         setSwapSpellActive(true);
         setSelectedOwnHero(null);
         setSelectedOpponentHero(null);
     };
     
     const cancelSwapSpell = () => {
+        setTimerActive(true);
         setSwapSpellActive(false);
         setSelectedOwnHero(null);
         setSelectedOpponentHero(null);
@@ -773,8 +793,10 @@ const switchTurn = () => {
             alert("Opponent has no Hero cards to destroy!");
             return;
         }
+        setTimerActive(false);
         setDestroyMode(true);
     };
+
     const forceOpponentDiscardHeroes = () => {
         // Determine opponent's hand based on current player
         const opponentHand = currentPlayer === 1 ? [...player2Hand] : [...player1Hand];
@@ -852,12 +874,15 @@ const switchTurn = () => {
             switchTurn();
         }
 
+        setTimerActive(true)
+
     };
     const activateStealMode = () => {
         if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) < 1) {
             return;
         }
         setStealMode(true);
+        setTimerActive(false)
         setSelectedOpponentHero(null);
     };
     
@@ -947,6 +972,8 @@ const switchTurn = () => {
         if ((currentPlayer === 1 ? player1ActionPoints : player2ActionPoints) - 1 === 0) {
             switchTurn();
         }
+
+        setTimerActive(false);
     };
     const pullFromOpponent = () => {
         if (!checkActionPoints()) return; // Check if player has action points
@@ -1067,9 +1094,11 @@ const switchTurn = () => {
 
         <div style={{ width: "100vw", height: "120vh", overflow: "hidden", margin: 0, padding: 0 }}>
         <div style={styles.gameBoard}>
-            <Timer currentPlayer={currentPlayer} onTimeOut={switchTurn} />
             <ActionPoints points={currentPlayer === 1 ? player1ActionPoints : player2ActionPoints} />
             <DrawCard onDrawCard={handleDrawCard} />
+            <div style={styles.timer}>
+                {timer}s
+            </div>
 
             {/* Player 2 Card Slots */}
             <div style={styles.playArea}>
@@ -1799,7 +1828,29 @@ const styles = {
         border: 'none',
         borderRadius: '5px',
         cursor: 'pointer'
-    }
+    },
+    timer: {
+        position: "absolute",
+        left: "20px",
+        top: "5%",
+        transform: "translateY(-50%)",
+        width: "160px",
+        height: "60px",
+        background: "radial-gradient(circle at center, rgba(88,173,136,0.3), rgba(22,44,36,0))",
+        border: "2px solid #58ad88",
+        borderRadius: "12px",
+        color: "#daf7e2",
+        fontSize: "25px",
+        fontFamily: "GreenFuz, sans-serif",
+        textAlign: "center",
+        textShadow: "0 0 4px #58ad88",
+        boxShadow: "0 0 10px rgba(88,173,136,0.4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        animation: "arcaneGlow 3s ease-in-out infinite alternate",
+        zIndex: 9999,
+      }
 };
 
 export default GameBoard
