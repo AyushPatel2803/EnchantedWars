@@ -6,6 +6,7 @@ import OpponentCardSlot from "./OpponentCardSlot";
 import { io } from "socket.io-client";
 import "./GameBoard.css";
 import { useLocation } from "react-router-dom";
+import DiscardSelectionModal from './DiscardSelectionModal';
 
 //heros
 import MooseDruid from "../assets/heros/MooseDruid.png";
@@ -133,6 +134,8 @@ const GameBoard = () => {
   const [heroItems, setHeroItems] = useState({});
   const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
   const [opponentHand, setOpponentHand] = useState([]);
+  const [isBullseyePopupOpen, setIsBullseyePopupOpen] = useState(false); // Controls the visibility of the Bullseye popup
+  const [discardPreviewCards, setDiscardPreviewCards] = useState([]); // Stores the cards to preview for discard
 
   useEffect(() => {
     socketRef.current = io("http://localhost:3000", {
@@ -623,6 +626,39 @@ const GameBoard = () => {
     });
   };
 
+  const handleBullseyeEffect = () => {
+    if (!isMyTurn) {
+      alert("It's not your turn!");
+      return;
+    }
+
+    if (discardPile.length === 0) {
+      alert("The discard pile is empty!");
+      return;
+    }
+
+    // Get top 3 cards from discard pile (or fewer if there aren't enough)
+    const topCards = discardPile.slice(-3).reverse(); // Reverse to show most recent first
+    setDiscardPreviewCards(topCards);
+    setIsBullseyePopupOpen(true);
+  };
+
+  const handleCardSelect = (selectedIndex) => {
+    if (selectedIndex < 0 || selectedIndex >= discardPreviewCards.length) return;
+
+    // Add selected card to hand
+    const selectedCard = discardPreviewCards[selectedIndex];
+    setPlayerHand((prev) => [...prev, selectedCard]);
+
+    // Remove selected card from discard pile and return others
+    const newDiscardPile = [...discardPile];
+    const selectedCardIndex = newDiscardPile.length - 1 - selectedIndex; // Find original index
+    newDiscardPile.splice(selectedCardIndex, 1); // Remove selected card
+    
+    setDiscardPile(newDiscardPile);
+    setIsBullseyePopupOpen(false);
+  };
+
   if (!selectedLeader) {
     return (
       <PartyLeaderSelection 
@@ -690,9 +726,15 @@ style={styles.slot}
                   {card.type === "Hero" && hoveredCardIndex === index && (
                     <button
                       style={styles.heroActionButton}
-                      onClick={() => handleHeroRoll(card, index)}
+                      onClick={() => {
+                        if (card.id === 7) { // Check for Bullseye card
+                          handleBullseyeEffect(); // Trigger Bullseye effect
+                        } else {
+                          handleHeroRoll(card, index); // Trigger default hero roll
+                        }
+                      }}
                     >
-                      Hero Action
+                      {card.id === 7 ? "Bullseye" : "Hero Action"}
                     </button>
                   )}
                 </div>
@@ -921,6 +963,14 @@ style={styles.slot}
               </button>
             </div>
           </div>
+        )}
+        {isBullseyePopupOpen && (
+          <DiscardSelectionModal
+            cards={discardPreviewCards}
+            cardImages={cardImageMap}
+            onSelect={handleCardSelect}
+            onClose={() => setIsBullseyePopupOpen(false)}
+          />
         )}
       </div>
     </div>
