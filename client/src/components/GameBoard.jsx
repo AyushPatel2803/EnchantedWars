@@ -46,32 +46,60 @@ import dice4 from "../assets/dice/dice4.png";
 import dice5 from "../assets/dice/dice5.png";
 import dice6 from "../assets/dice/dice6.png";
 
+const cardImageMap = {
+  MooseDruid: MooseDruid,
+  DarkGoblin: DarkGoblin,
+  DruidMask: DruidMask,
+  DecoyDoll: DecoyDoll,
+  CriticalBoost: CriticalBoost,
+  LostSoul: LostSoul,
+  Bullseye: Bullseye,
+  Hydra: Hydra,
+  Cyborg20xx: Cyborg20xx,
+  BearCleaver: BearCleaver,
+  Cerberus: Cerberus,
+  Gargoyle: Gargoyle,
+  Gorgon: Gorgon,
+  MightyOak: MightyOak,
+  Ragnarok: Ragnarok,
+  TimeMachine: TimeMachine,
+  TitaniumGiant: TitaniumGiant,
+  Vampire: Vampire,
+  WhiteMage: WhiteMage,
+  WingedSerpent: WingedSerpent,
+  RoboMask: RoboMask,
+  SerpentMask: SerpentMask,
+  SpectreMask: SpectreMask,
+  MAD: MAD,
+  Switcheroo: Switcheroo,
+};
+
 const cardList = [
-  { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid", min: 4, max: 8 },
-  { id: 2, image: DarkGoblin, type: "Hero", affinity: "Dark", min: 0, max: 6 },
-  { id: 3, image: DruidMask, type: "Item", affinity: "Druid" },
-  { id: 4, image: DecoyDoll, type: "Item", affinity: null },
-  { id: 5, image: CriticalBoost, type: "Spell", affinity: null },
-  { id: 6, image: LostSoul, type: "Hero", affinity: "Undead", min: 0, max: 6 },
-  { id: 7, image: Bullseye, type: "Hero", affinity: "Consort", min: 0, max: 4 },
-  { id: 8, image: Hydra, type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
-  { id: 9, image: Cyborg20xx, type: "Hero", affinity: "Cyborg", min: 4, max: 10 },
-  { id: 10, image: Switcheroo, type: "Spell" },
-  { id: 11, image: MAD, type: "Spell" },
-  { id: 12, image: RoboMask, type: "Item", affinity: "Cyborg" },
-  { id: 13, image: SpectreMask, type: "Item", affinity: "Undead" },
-  { id: 15, image: SerpentMask, type: "Item", affinity: "Serpentine" },
-  { id: 17, image: Gorgon, type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
-  { id: 18, image: WingedSerpent, type: "Hero", affinity: "Serpentine", min: 0, max: 7 },
-  { id: 19, image: Ragnarok, type: "Hero", affinity: "Consort", min: 0, max: 6 },
-  { id: 20, image: WhiteMage, type: "Hero", affinity: "Consort", min: 0, max: 7 },
-  { id: 21, image: TimeMachine, type: "Hero", affinity: "Cyborg", min: 0, max: 11 },
-  { id: 22, image: TitaniumGiant, type: "Hero", affinity: "Cyborg", min: 0, max: 8 },
-  { id: 23, image: MightyOak, type: "Hero", affinity: "Druid", min: 0, max: 0 },
-  { id: 24, image: BearCleaver, type: "Hero", affinity: "Druid", min: 0, max: 8 },
-  { id: 25, image: Cerberus, type: "Hero", affinity: "Dark", min: 6, max: 8 },
-  { id: 26, image: Gargoyle, type: "Hero", affinity: "Dark", min: 0, max: 9 },
-  { id: 27, image: Vampire, type: "Hero", affinity: "Undead", min: 0, max: 6 },
+  { id: 1, name: "MooseDruid", image: MooseDruid, type: "Hero", affinity: "Druid", min: 4, max: 8 },
+  { id: 2, name: "DarkGoblin", image: DarkGoblin, type: "Hero", affinity: "Dark", min: 0, max: 6 },
+  { id: 3, name: "DruidMask", image: DruidMask, type: "Item", affinity: "Druid" },
+  { id: 4, name: "DecoyDoll", image: DecoyDoll, type: "Item", affinity: null },
+  { id: 5, name: "CriticalBoost", image: CriticalBoost, type: "Spell", affinity: null },
+  { id: 6, name: "LostSoul", image: LostSoul, type: "Hero", affinity: "Undead", min: 0, max: 6 },
+  { id: 7, name: "Bullseye", image: Bullseye, type: "Hero", affinity: "Consort", min: 0, max: 4 },
+  { id: 8, name: "Hydra", image: Hydra, type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
+  { id: 9, name: "Cyborg20xx", image: Cyborg20xx, type: "Hero", affinity: "Cyborg", min: 4, max: 10 },
+  { id: 10, name: "Switcheroo", image: Switcheroo, type: "Spell" },
+  { id: 11, name: "MAD", image: MAD, type: "Spell" },
+  { id: 12, name: "RoboMask", image: RoboMask, type: "Item", affinity: "Cyborg" },
+  { id: 13, name: "SpectreMask", image: SpectreMask, type: "Item", affinity: "Undead" },
+  { id: 15, name: "SerpentMask", image: SerpentMask, type: "Item", affinity: "Serpentine" },
+  { id: 17, name: "Gorgon", image: Gorgon, type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
+  { id: 18, name: "WingedSerpent", image: WingedSerpent, type: "Hero", affinity: "Serpentine", min: 0, max: 7 },
+  { id: 19, name: "Ragnarok", image: Ragnarok, type: "Hero", affinity: "Consort", min: 0, max: 6 },
+  { id: 20, name: "WhiteMage", image: WhiteMage, type: "Hero", affinity: "Consort", min: 0, max: 7 },
+  { id: 21, name: "TimeMachine", image: TimeMachine, type: "Hero", affinity: "Cyborg", min: 0, max: 11 },
+  { id: 22, name: "TitaniumGiant", image: TitaniumGiant, type: "Hero", affinity: "Cyborg", min: 0, max: 8 },
+  { id: 23, name: "MightyOak", image: MightyOak, type: "Hero", affinity: "Druid", min: 0, max: 0 },
+  { id: 24, name: "BearCleaver", image: BearCleaver, type: "Hero", affinity: "Druid", min: 0, max: 8 },
+  { id: 25, name: "Cerberus", image: Cerberus, type: "Hero", affinity: "Dark", min: 6, max: 8 },
+  { id: 26, name: "Gargoyle", image: Gargoyle, type: "Hero", affinity: "Dark", min: 0, max: 9 },
+  { id: 27, name: "Vampire", image: Vampire, type: "Hero", affinity: "Undead", min: 0, max: 6 },
 ];
 
 const GameBoard = () => {
@@ -103,6 +131,8 @@ const GameBoard = () => {
   const [selectedOpponentHero, setSelectedOpponentHero] = useState(null);
   const [madSpellCard, setMADSpellCard] = useState(null);
   const [heroItems, setHeroItems] = useState({});
+  const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
+  const [opponentHand, setOpponentHand] = useState([]);
 
   useEffect(() => {
     socketRef.current = io("http://localhost:3000", {
@@ -118,13 +148,13 @@ const GameBoard = () => {
       socketRef.current.emit("find_match", playerName);
     });
 
-    socketRef.current.on("match_found", ({ opponent, gameId, isFirstPlayer }) => {
+    socketRef.current.on("match_found", ({ opponent, gameId, isFirstPlayer, initialHand }) => {
       setGameId(gameId);
       setOpponentName(opponent);
       setIsMyTurn(isFirstPlayer);
       setTurnMessage(isFirstPlayer ? "Your turn!" : "Opponent's turn");
       setTimeLeft(60);
-      setPlayerHand(getRandomCards());
+      setPlayerHand(initialHand); // Set the player's initial hand
       setActionPoints(3);
     });
 
@@ -134,14 +164,6 @@ const GameBoard = () => {
       setTurnMessage(currentPlayerId === socketRef.current.id ? "Your turn!" : "Opponent's turn");
       setTimeLeft(60);
       setActionPoints(3);
-    });
-
-    socketRef.current.on("card_played", ({ slotIndex, card }) => {
-      setOpponentPlayedCards((prev) => {
-        const newPlayed = [...prev];
-        newPlayed[slotIndex] = card;
-        return newPlayed;
-      });
     });
 
     socketRef.current.on("opponent_disconnected", ({ message }) => {
@@ -183,6 +205,56 @@ const GameBoard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    socketRef.current.on("darkgoblin_success", ({ stolenCard }) => {
+      setPlayerHand((prev) => [...prev, stolenCard]);
+      alert(`Dark Goblin stole ${stolenCard.name} from opponent!`);
+    });
+
+    socketRef.current.on("darkgoblin_failure", ({ message }) => {
+      alert(message);
+    });
+
+    return () => {
+      socketRef.current.off("darkgoblin_success");
+      socketRef.current.off("darkgoblin_failure");
+    };
+  }, []);
+
+  useEffect(() => {
+    socketRef.current.on("update_hands", ({ yourHand, opponentHand }) => {
+      console.log("Updating hands:");
+      console.log("Your hand:", yourHand); // Debug log for your hand
+      console.log("Opponent's hand:", opponentHand); // Debug log for opponent's hand
+
+      // Ensure both hands are properly updated
+      setPlayerHand(yourHand || []); // Default to an empty array if yourHand is undefined
+      setOpponentHand(opponentHand || []); // Default to an empty array if opponentHand is undefined
+    });
+
+    return () => {
+      socketRef.current.off("update_hands");
+    };
+  }, []);
+
+  useEffect(() => {
+    socketRef.current.on("card_played", ({ slotIndex, card }) => {
+      console.log("Received card played:", card); // Debug log
+      setOpponentPlayedCards((prev) => {
+        const newPlayed = [...prev];
+        newPlayed[slotIndex] = {
+          ...card,
+          image: cardImageMap[card.name], // Ensure the image is properly set using the mapping
+        };
+        return newPlayed;
+      });
+    });
+
+    return () => {
+      socketRef.current.off("card_played");
+    };
+  }, []);
+
   const handleEndTurn = useCallback(() => {
     if (!isMyTurn) return;
     socketRef.current.emit("end_turn");
@@ -208,7 +280,12 @@ const GameBoard = () => {
 
   const getRandomCards = (count = 5) => {
     const shuffledCards = [...cardList].sort(() => Math.random() - 0.5);
-    return shuffledCards.slice(0, count).map(card => ({ ...card, uniqueId: Date.now() + Math.random() }));
+    return shuffledCards.slice(0, count).map(card => ({
+      ...card,
+      uniqueId: Date.now() + Math.random(), // Add a unique ID
+      name: card.name || `Card${card.id}`, // Ensure the name property is included
+      image: card.image || cardImageMap[card.name] || DecoyDoll, // Ensure the image property is included
+    }));
   };
 
   const checkActionPoints = () => {
@@ -439,6 +516,67 @@ const GameBoard = () => {
     setTimeout(() => {
       alert(`You rolled a ${totalRoll}!`);
   
+      // Vampire effect (ID 27)
+      if (card.id === 27) {
+        if (totalRoll >= 6) {
+          alert("Vampire effect activated! Drawing 2 cards...");
+          const newCards = getRandomCards(2);
+          setPlayerHand((prevHand) => [...prevHand, ...newCards]);
+        } else {
+          alert("Vampire effect did not activate.");
+        }
+        return;
+      }
+  
+      // TitaniumGiant effect (ID 22)
+      if (card.id === 22) {
+        if (totalRoll >= 8) {
+          alert("TitaniumGiant effect activated! Drawing 2 cards...");
+          const newCards = getRandomCards(2);
+          setPlayerHand((prevHand) => [...prevHand, ...newCards]);
+  
+          // Check if one of the drawn cards is a Cyborg
+          const hasCyborg = newCards.some((newCard) => newCard.affinity === "Cyborg");
+          if (hasCyborg) {
+            alert("A Cyborg card was drawn! Destroying a random hero card in your hand...");
+            const heroCards = playerHand.filter((handCard) => handCard.type === "Hero");
+            if (heroCards.length > 0) {
+              const randomHeroIndex = Math.floor(Math.random() * heroCards.length);
+              const cardToDestroy = heroCards[randomHeroIndex];
+  
+              // Remove the destroyed card from the player's hand
+              setPlayerHand((prevHand) =>
+                prevHand.filter((handCard) => handCard.uniqueId !== cardToDestroy.uniqueId)
+              );
+  
+              alert(`Destroyed hero card: ${cardToDestroy.name}`);
+            } else {
+              alert("No hero cards in your hand to destroy!");
+            }
+          }
+        } else {
+          alert("TitaniumGiant effect did not activate.");
+        }
+        return;
+      }
+  
+      // LostSoul effect (ID 6)
+      if (card.id === 6) {
+        handleLostSoulEffect();
+        return;
+      }
+  
+      // Dark Goblin effect (ID 2)
+      if (card.id === 2) {
+        if (totalRoll >= 6) {
+          activateDarkGoblinEffect();
+        } else {
+          alert("Dark Goblin failed to steal a card.");
+        }
+        return;
+      }
+  
+      // MooseDruid effect (ID 1)
       if (card.id === 1) {
         if (totalRoll === 8) {
           setIsOpponentHeroPopupOpen(true);
@@ -454,6 +592,35 @@ const GameBoard = () => {
         }
       }
     }, 100);
+  };
+
+  const handleLostSoulEffect = () => {
+    if (discardPile.length === 0) {
+      alert("The discard pile is empty! No card to draw.");
+      return;
+    }
+  
+    const lastDiscardedCard = discardPile[discardPile.length - 1];
+    setPlayerHand((prevHand) => [...prevHand, lastDiscardedCard]);
+    setDiscardPile((prev) => prev.slice(0, -1)); // Remove the last card from the discard pile
+    alert("You have drawn a card from the discard pile!");
+  };
+
+  const activateDarkGoblinEffect = () => {
+    console.log("Attempting Dark Goblin steal...");
+    console.log("Opponent hand:", opponentHand); // Debug log
+  
+    // Check if opponentHand is defined and has cards
+    if (!opponentHand || opponentHand.length === 0) {
+      alert("Opponent has no cards to steal!");
+      return;
+    }
+  
+    // Notify server to handle the steal
+    socketRef.current.emit("darkgoblin_effect", { 
+      gameId,
+      playerId: socketRef.current.id
+    });
   };
 
   if (!selectedLeader) {
@@ -497,16 +664,18 @@ const GameBoard = () => {
         <div style={styles.playArea}>
           {playedCards.map((card, index) => (
             <div
-              key={index}
-              style={styles.slot}
+key={index}
+style={styles.slot}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, index)}
-            >
+              onMouseEnter={() => setHoveredCardIndex(index)}
+              onMouseLeave={() => setHoveredCardIndex(null)}
+>
               {card ? (
                 <div style={{ ...styles.card, position: "relative" }}>
                   <img
-                    src={card.image}
-                    alt={`Card ${card.id}`}
+                    src={cardImageMap[card.name]} // Use the mapping here
+                    alt={card.name}
                     style={styles.cardImage}
                   />
                   {heroItems[index] && (
@@ -518,12 +687,12 @@ const GameBoard = () => {
                       />
                     </div>
                   )}
-                  {card.id === 1 && (
+                  {card.type === "Hero" && hoveredCardIndex === index && (
                     <button
-                      style={styles.heroRollButton}
+                      style={styles.heroActionButton}
                       onClick={() => handleHeroRoll(card, index)}
                     >
-                      Hero Roll
+                      Hero Action
                     </button>
                   )}
                 </div>
@@ -580,7 +749,11 @@ const GameBoard = () => {
               onMouseEnter={() => card.type === "Spell" && setHoveredSpell(card)}
               onMouseLeave={() => card.type === "Spell" && setHoveredSpell(null)}
             >
-              <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+              <img
+                src={cardImageMap[card.name]} // Dynamically map card name to image
+                alt={card.name}
+                style={styles.cardImage}
+              />
               {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
                 <div style={styles.spellEffectContainer}>
                   <button
@@ -980,75 +1153,31 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1000,
-  },
-  popupContainer: {
-    backgroundColor: "white",
-    padding: "20px",
-    borderRadius: "10px",
-    textAlign: "center",
-    width: "80%",
-    maxWidth: "500px",
-  },
-  popupHand: {
-    display: "flex",
-    justifyContent: "center",
-    flexWrap: "wrap",
-    gap: "10px",
-    margin: "20px 0",
-  },
-  confirmButton: {
-    backgroundColor: "#4CAF50",
-    color: "white",
-    border: "none",
-    padding: "10px 20px",
-    borderRadius: "5px",
-    cursor: "pointer",
-    marginRight: "10px",
-  },
-  cancelButton: {
-    backgroundColor: "#FF5722",
-    color: "white",
-    border: "none",
-    padding: "10px 20px",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-  itemOverlay: {
-    position: "absolute",
-    top: "10px",
-    right: "10px",
-    width: "40px",
-    height: "40px",
-    borderRadius: "50%",
-    overflow: "hidden",
-    border: "2px solid white",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 5,
-  },
-  itemImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
-  heroRollButton: {
-    position: "absolute",
-    bottom: "5px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    backgroundColor: "#4CAF50",
-    color: "white",
-    border: "none",
-    padding: "5px 10px",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontSize: "0.8rem",
-    fontWeight: "bold",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
     zIndex: 10,
+  },
+  heroActionButton: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)", // Center the button
+    backgroundColor: "#4CAF50",
+    color: "white",
+    border: "none",
+    padding: "6px 12px", // Reduced padding for a smaller button
+    borderRadius: "50px", // Fully rounded corners for a curved button
+    cursor: "pointer",
+    fontSize: "0.8rem", // Smaller font size
+    fontWeight: "bold",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)", // Subtle shadow for a cleaner look
+    transition: "all 0.3s ease",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px", // Slightly reduced letter spacing
+    zIndex: 5, // Ensure it appears above other elements
+  },
+  heroActionButtonHover: {
+    backgroundColor: "#45A049",
+    transform: "translate(-50%, -50%) scale(1.1)", // Slightly larger scale on hover
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)", // Enhanced shadow on hover
   },
 };
 
