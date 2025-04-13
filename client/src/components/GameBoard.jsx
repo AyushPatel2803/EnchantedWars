@@ -136,10 +136,12 @@ const GameBoard = () => {
   const [opponentHand, setOpponentHand] = useState([]);
   const [isBullseyePopupOpen, setIsBullseyePopupOpen] = useState(false); // Controls the visibility of the Bullseye popup
   const [discardPreviewCards, setDiscardPreviewCards] = useState([]); // Stores the cards to preview for discard
+  const [isWhiteMagePopupOpen, setIsWhiteMagePopupOpen] = useState(false); // Controls the visibility of the White Mage popup
+  const [heroCardsInDiscard, setHeroCardsInDiscard] = useState([]); // Stores hero cards in the discard pile for White Mage effect
+  const [boostedHeroes, setBoostedHeroes] = useState([]); // Tracks indices of boosted heroes
 
   useEffect(() => {
     socketRef.current = io("http://localhost:3000", {
-      autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -379,6 +381,30 @@ const GameBoard = () => {
         const newPlayed = [...prev];
         newPlayed[slotIndex] = card;
 
+        // Apply Mighty Oak effect
+        if (card.id === 23) { // Mighty Oak ID
+          if (slotIndex > 0 && newPlayed[slotIndex - 1]?.type === "Hero") {
+            newPlayed[slotIndex - 1].boost = 2; // Add boost to the left hero
+          }
+          if (slotIndex < newPlayed.length - 1 && newPlayed[slotIndex + 1]?.type === "Hero") {
+            newPlayed[slotIndex + 1].boost = 2; // Add boost to the right hero
+          }
+        }
+
+        // Apply Hydra effect
+        if (card.id === 8) { // Hydra ID
+          newPlayed.forEach((playedCard, index) => {
+            if (playedCard && index !== slotIndex && playedCard.type === "Hero") {
+              newPlayed[index] = {
+                ...playedCard,
+                boost: (playedCard.boost || 0) + 1, // Add +1 boost to all other heroes
+                hydraEffect: true, // Add Hydra effect indicator
+              };
+            }
+          });
+          alert("Hydra effect activated! All other heroes gain +1 boost to their rolls.");
+        }
+
         if (checkWinCondition(newPlayed)) {
           alert("You win!");
           socketRef.current.emit("player_won", { gameId, playerId });
@@ -519,6 +545,56 @@ const GameBoard = () => {
     setTimeout(() => {
       alert(`You rolled a ${totalRoll}!`);
   
+      // BearCleaver effect (ID 24)
+      if (card.id === 24) {
+        if (totalRoll >= 8) {
+          alert("BearCleaver effect activated! Drawing 2 cards...");
+          const newCards = getRandomCards(2);
+          setPlayerHand((prevHand) => [...prevHand, ...newCards]);
+  
+          // Check if one of the drawn cards is a spell
+          const hasSpell = newCards.some((newCard) => newCard.type === "Spell");
+          if (hasSpell) {
+            alert("A spell card was drawn! Destroying a random hero card in your hand...");
+            const heroCards = playerHand.filter((handCard) => handCard.type === "Hero");
+            if (heroCards.length > 0) {
+              const randomHeroIndex = Math.floor(Math.random() * heroCards.length);
+              const cardToDestroy = heroCards[randomHeroIndex];
+  
+              // Remove the destroyed card from the player's hand
+              setPlayerHand((prevHand) =>
+                prevHand.filter((handCard) => handCard.uniqueId !== cardToDestroy.uniqueId)
+              );
+  
+              alert(`Destroyed hero card: ${cardToDestroy.name}`);
+            } else {
+              alert("No hero cards in your hand to destroy!");
+            }
+          }
+        } else {
+          alert("BearCleaver effect did not activate.");
+        }
+        return;
+      }
+  
+      // Winged Serpent effect (ID 18)
+      if (card.id === 18) {
+        if (totalRoll >= 7) {
+          alert("Winged Serpent effect activated! Drawing cards until you have 7 cards in your hand.");
+          setPlayerHand((prevHand) => {
+            const cardsNeeded = 7 - prevHand.length;
+            if (cardsNeeded > 0) {
+              const newCards = getRandomCards(cardsNeeded);
+              return [...prevHand, ...newCards];
+            }
+            return prevHand;
+          });
+        } else {
+          alert("Winged Serpent effect did not activate.");
+        }
+        return;
+      }
+  
       // Vampire effect (ID 27)
       if (card.id === 27) {
         if (totalRoll >= 6) {
@@ -593,6 +669,24 @@ const GameBoard = () => {
         } else {
           alert("Nothing happens.");
         }
+        return;
+      }
+
+      // White Mage effect (ID 20)
+      if (card.id === 20) {
+        if (totalRoll >= 7) {
+          alert("White Mage effect activated! Searching discard pile for a hero card...");
+          const heroCards = discardPile.filter((discardedCard) => discardedCard.type === "Hero");
+          if (heroCards.length > 0) {
+            setHeroCardsInDiscard(heroCards);
+            setIsWhiteMagePopupOpen(true);
+          } else {
+            alert("No hero cards available in the discard pile!");
+          }
+        } else {
+          alert("White Mage effect did not activate.");
+        }
+        return;
       }
     }, 100);
   };
@@ -659,6 +753,18 @@ const GameBoard = () => {
     setIsBullseyePopupOpen(false);
   };
 
+  const handleWhiteMageSelect = (selectedCard) => {
+    if (!selectedCard) return;
+
+    // Add selected card to hand
+    setPlayerHand((prev) => [...prev, selectedCard]);
+
+    // Remove selected card from discard pile
+    setDiscardPile((prev) => prev.filter((card) => card.uniqueId !== selectedCard.uniqueId));
+
+    setIsWhiteMagePopupOpen(false);
+  };
+
   if (!selectedLeader) {
     return (
       <PartyLeaderSelection 
@@ -700,41 +806,40 @@ const GameBoard = () => {
         <div style={styles.playArea}>
           {playedCards.map((card, index) => (
             <div
-key={index}
-style={styles.slot}
+              key={index}
+              style={styles.slot}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, index)}
               onMouseEnter={() => setHoveredCardIndex(index)}
               onMouseLeave={() => setHoveredCardIndex(null)}
->
+            >
               {card ? (
                 <div style={{ ...styles.card, position: "relative" }}>
                   <img
-                    src={cardImageMap[card.name]} // Use the mapping here
+                    src={cardImageMap[card.name]}
                     alt={card.name}
                     style={styles.cardImage}
                   />
-                  {heroItems[index] && (
-                    <div style={styles.itemOverlay}>
-                      <img
-                        src={heroItems[index].image}
-                        alt={`Item ${heroItems[index].id}`}
-                        style={styles.itemImage}
-                      />
-                    </div>
+                  {card.boost && (
+                    <div style={styles.boostIndicator}>+{card.boost}</div> // Add boost indicator
+                  )}
+                  {card.hydraEffect && (
+                    <div style={styles.hydraCircle}>+1</div> // Add Hydra effect green circle
                   )}
                   {card.type === "Hero" && hoveredCardIndex === index && (
                     <button
                       style={styles.heroActionButton}
                       onClick={() => {
-                        if (card.id === 7) { // Check for Bullseye card
-                          handleBullseyeEffect(); // Trigger Bullseye effect
+                        if (card.id === 7) { // Bullseye card
+                          handleBullseyeEffect();
+                        } else if (card.id === 8) { // Hydra card
+                          alert("Hydra effect is passive and already applied!");
                         } else {
-                          handleHeroRoll(card, index); // Trigger default hero roll
+                          handleHeroRoll(card, index);
                         }
                       }}
                     >
-                      {card.id === 7 ? "Bullseye" : "Hero Action"}
+                      {card.id === 7 ? "Bullseye" : card.id === 8 ? "Hydra" : "Hero Action"}
                     </button>
                   )}
                 </div>
@@ -971,6 +1076,96 @@ style={styles.slot}
             onSelect={handleCardSelect}
             onClose={() => setIsBullseyePopupOpen(false)}
           />
+        )}
+        {isWhiteMagePopupOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}>
+            <div style={{
+              backgroundColor: '#1E7149',
+              padding: '20px',
+              borderRadius: '10px',
+              maxWidth: '80%',
+              maxHeight: '80%',
+              overflow: 'auto',
+              border: '3px solid #4CAF50',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+            }}>
+              <h3 style={{
+                color: 'white',
+                textAlign: 'center',
+                marginBottom: '20px',
+                textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
+              }}>Select a Hero Card from the Discard Pile</h3>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: '15px',
+                marginBottom: '20px',
+              }}>
+                {heroCardsInDiscard.map((card, index) => (
+                  <div 
+                    key={index} 
+                    style={{
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      ':hover': {
+                        transform: 'scale(1.05)',
+                      }
+                    }}
+                    onClick={() => handleWhiteMageSelect(card)}
+                  >
+                    <img 
+                      src={cardImageMap[card.name] || card.image || ''}
+                      alt={card.name || 'Card'} 
+                      style={{
+                        width: '120px',
+                        height: '160px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '2px solid #4CAF50',
+                      }}
+                      onError={(e) => {
+                        e.target.src = ''; // Handle image loading errors
+                      }}
+                    />
+                    <p style={{
+                      color: 'white',
+                      textAlign: 'center',
+                      marginTop: '5px',
+                      fontSize: '0.9rem',
+                    }}>{card.name || 'Unknown Card'}</p>
+                  </div>
+                ))}
+              </div>
+              <button 
+                style={{
+                  display: 'block',
+                  margin: '0 auto',
+                  padding: '8px 20px',
+                  backgroundColor: '#FF5722',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+                onClick={() => setIsWhiteMagePopupOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -1228,6 +1423,46 @@ const styles = {
     backgroundColor: "#45A049",
     transform: "translate(-50%, -50%) scale(1.1)", // Slightly larger scale on hover
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)", // Enhanced shadow on hover
+  },
+  boostIndicator: {
+    position: "absolute",
+    bottom: "5px",
+    right: "5px",
+    backgroundColor: "#FFD700",
+    color: "#000",
+    padding: "2px 5px",
+    borderRadius: "3px",
+    fontSize: "0.8rem",
+    fontWeight: "bold",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+  },
+  hydraIndicator: {
+    position: "absolute",
+    top: "5px",
+    left: "5px",
+    backgroundColor: "#4CAF50",
+    color: "#fff",
+    padding: "2px 5px",
+    borderRadius: "3px",
+    fontSize: "0.8rem",
+    fontWeight: "bold",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+  },
+  hydraCircle: {
+    position: "absolute",
+    top: "10px",
+    left: "10px",
+    width: "20px",
+    height: "20px",
+    borderRadius: "50%",
+    backgroundColor: "#4CAF50",
+    color: "#fff",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: "0.8rem",
+    fontWeight: "bold",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
   },
 };
 
