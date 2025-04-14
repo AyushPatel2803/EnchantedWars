@@ -1154,6 +1154,15 @@ const GameBoard = () => {
                     alt={card.name}
                     style={styles.cardImage}
                   />
+                  {heroItems[index] && (
+            <div style={styles.itemIndicator}>
+              <img
+                src={cardImageMap[heroItems[index].name]}
+                alt={heroItems[index].name}
+                style={styles.itemImage}
+              />
+            </div>
+          )}
                   {card.boost && (
                     <div style={styles.boostIndicator}>+{card.boost}</div>
                   )}
@@ -2033,6 +2042,27 @@ const styles = {
     fontSize: "0.8rem",
     fontWeight: "bold",
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+  },
+  itemIndicator: {
+    position: "absolute",
+    top: "5px",
+    right: "5px",
+    width: "30px",
+    height: "30px",
+    borderRadius: "50%",
+    backgroundColor: "#fff",
+    border: "2px solid #4CAF50",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+    zIndex: 5,
+  },
+  itemImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    borderRadius: "50%",
   },
 
   winnerOverlay: {
