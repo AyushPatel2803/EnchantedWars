@@ -59,13 +59,31 @@ import MistressOfDarknessWinner from "../assets/winnerCards/MistressOfDarkness.p
 import TheSoulkeeperWinner from "../assets/winnerCards/TheSoulkeeper.png";
 
 const winnerImageMap = {
-  "Chronomancer": ChronomancerWinner,
-  "Natural Guardian": NaturalGuardianWinner,
-  "The Consort": TheConsortWinner,
-  "Serpernt Wisperer": SerperntWispererWinner,
-  "Mistress Of Darkness": MistressOfDarknessWinner,
-  "The Soulkeeper": TheSoulkeeperWinner,
+  "chronomancer": ChronomancerWinner,
+  "nature guardian": NaturalGuardianWinner,
+  "the consort": TheConsortWinner,
+  "the serpent": SerperntWispererWinner,
+  "mistress of darkness": MistressOfDarknessWinner,
+  "the soulkeeper": TheSoulkeeperWinner,
 };
+
+//loser
+import ChronomancerLoser from "../assets/winnerCards/ChronomancerLoser.png";
+import NaturalGuardianLoser from "../assets/winnerCards/NaturalGuardianLoser.png";
+import TheConsortLoser from "../assets/winnerCards/TheConsortLoser.png";
+import SerperntWispererLoser from "../assets/winnerCards/SerperntWispererLoser.png";
+import MistressOfDarknessLoser from "../assets/winnerCards/MistressOfDarknessLoser.png";
+import TheSoulkeeperLoser from "../assets/winnerCards/TheSoulkeeperLoser.png";
+
+const loserImageMap  = {
+  "chronomancer": ChronomancerLoser,
+  "nature guardian": NaturalGuardianLoser,
+  "the consort": TheConsortLoser,
+  "the serpent": SerperntWispererLoser,
+  "mistress of darkness": MistressOfDarknessLoser,
+  "the soulkeeper": TheSoulkeeperLoser,
+};
+
 
 const cardImageMap = {
   EmberLeaf: EmberLeaf,
@@ -140,6 +158,8 @@ const GameBoard = () => {
   const [selectedLeader, setSelectedLeader] = useState(null);
   const [isWinnerPopupOpen, setIsWinnerPopupOpen] = useState(false);
   const [winnerLeaderName, setWinnerLeaderName] = useState(null);
+  const [isLoserPopupOpen, setIsLoserPopupOpen] = useState(false);
+  const [loserLeaderName, setLoserLeaderName] = useState(null);
   const [timeLeft, setTimeLeft] = useState(60);
   const [playerId, setPlayerId] = useState(null);
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
@@ -224,17 +244,29 @@ const GameBoard = () => {
 
   useEffect(() => {
     socketRef.current.on("game_over", ({ winner }) => {
+      console.log("Game over event:", winner);
       if (winner === playerId) {
-        alert("Congratulations! You win!");
+        // Winner branch
+        // Normalize the name to match the map:
+        const normalized = selectedLeader.name.trim().toLowerCase();
+        console.log("WINNER normalized name:", normalized);
+        setWinnerLeaderName(normalized);
+        setIsWinnerPopupOpen(true);
+        socketRef.current.emit("player_won", { gameId, playerId });
       } else {
-        alert(`You have been defeated by ${opponentName}. Better luck next time!`);
+        // Loser branch
+        const normalized = selectedLeader.name.trim().toLowerCase();
+        console.log("Setting loser to:", normalized);
+        setLoserLeaderName(normalized);
+        setIsLoserPopupOpen(true);
       }
     });
-
+  
     return () => {
       socketRef.current.off("game_over");
     };
-  }, [playerId, opponentName]);
+  }, [playerId, opponentName, selectedLeader]);
+  
 
   useEffect(() => {
     socketRef.current.on("card_destroyed", ({ slotIndex }) => {
@@ -1669,8 +1701,29 @@ const GameBoard = () => {
         </div>
       )}
 
-    </div>
+        {/* Loser Popup */}
+                  {isLoserPopupOpen && loserLeaderName && (
+            <div style={styles.loserOverlay}>
+              <div style={styles.loserContainer}>
+                <img
+                  src={loserImageMap[loserLeaderName]}
+                  alt={`${loserLeaderName} Loses!`}
+                  style={styles.loserImage}
+                />
+                <div style={styles.loserText}>You Lose!</div>
+                <button 
+                  onClick={() => setIsLoserPopupOpen(false)}
+                  style={styles.loserCloseButton}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+      </div>
   );
+
 };
 
 const styles = {
@@ -2022,7 +2075,51 @@ const styles = {
     fontSize: "1rem",
     transition: "background-color 0.2s ease",
   },
+
+  // You can reuse a similar style as the winner popup
+loserOverlay: {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  backgroundColor: "rgba(0, 0, 0, 0.8)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000,
+},
+loserContainer: {
+  backgroundColor: "#fff",
+  borderRadius: "10px",
+  padding: "30px",
+  textAlign: "center",
+  boxShadow: "0 0 20px rgba(0, 0, 0, 0.4)",
+},
+loserImage: {
+  width: "300px",      // Adjust size as desired
+  height: "auto",
+  marginBottom: "15px",
+},
+loserText: {
+  fontSize: "2rem",
+  fontWeight: "bold",
+  color: "#FF5722",    // A contrasting color (red/orange) for losing
+  marginBottom: "20px",
+},
+loserCloseButton: {
+  padding: "10px 20px",
+  backgroundColor: "#FF5722",
+  color: "#fff",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
+  fontSize: "1rem",
+  transition: "background-color 0.2s ease",
+},
+
 };
+
 
 // Add CSS keyframes for the pulsing animation
 const styleSheet = document.styleSheets[0];

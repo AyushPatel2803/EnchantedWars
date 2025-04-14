@@ -51,6 +51,7 @@ function MainPage() {
           >
             {isSearching ? "Searching..." : "Find Match"}
           </button>
+        
           <button
             className="modern-button"
             onClick={() => navigate("/local-game")}
