@@ -16,7 +16,7 @@ import Bullseye from "../assets/heros/Bullseye.png";
 import Hydra from "../assets/heros/Hydra.png";
 import Cyborg20xx from "../assets/heros/Cyborg20xx.png";
 import BearCleaver from "../assets/heros/BearCleaver.png";
-import Cerberus from "../assets/heros/Cerberus.png";
+import Arachnea from "../assets/heros/Arachnea.png";
 import Gargoyle from "../assets/heros/Gargoyle.png";
 import Gorgon from "../assets/heros/Gorgon.png";
 import MightyOak from "../assets/heros/MightyOak.png";
@@ -26,6 +26,7 @@ import TitaniumGiant from "../assets/heros/TitaniumGiant.png";
 import Vampire from "../assets/heros/Vampire.png";
 import WhiteMage from "../assets/heros/WhiteMage.png";
 import WingedSerpent from "../assets/heros/WingedSerpent.png";
+import GhastlyGhoul from "../assets/heros/GhastlyGhoul.png";
 
 //items
 import DruidMask from "../assets/items/DruidMask.png";
@@ -58,7 +59,7 @@ const cardImageMap = {
   Hydra: Hydra,
   Cyborg20xx: Cyborg20xx,
   BearCleaver: BearCleaver,
-  Cerberus: Cerberus,
+  Arachnea: Arachnea,
   Gargoyle: Gargoyle,
   Gorgon: Gorgon,
   MightyOak: MightyOak,
@@ -73,6 +74,7 @@ const cardImageMap = {
   SpectreMask: SpectreMask,
   MAD: MAD,
   Switcheroo: Switcheroo,
+  GhastlyGhoul: GhastlyGhoul,
 };
 
 const cardList = [
@@ -98,9 +100,10 @@ const cardList = [
   { id: 22, name: "TitaniumGiant", image: TitaniumGiant, type: "Hero", affinity: "Cyborg", min: 0, max: 8 },
   { id: 23, name: "MightyOak", image: MightyOak, type: "Hero", affinity: "Druid", min: 0, max: 0 },
   { id: 24, name: "BearCleaver", image: BearCleaver, type: "Hero", affinity: "Druid", min: 0, max: 8 },
-  { id: 25, name: "Cerberus", image: Cerberus, type: "Hero", affinity: "Dark", min: 6, max: 8 },
+  { id: 25, name: "Arachnea", image: Arachnea, type: "Hero", affinity: "Dark", min: 6, max: 8 },
   { id: 26, name: "Gargoyle", image: Gargoyle, type: "Hero", affinity: "Dark", min: 0, max: 9 },
   { id: 27, name: "Vampire", image: Vampire, type: "Hero", affinity: "Undead", min: 0, max: 6 },
+  { id: 28, name: "GhastlyGhoul", image: GhastlyGhoul, type: "Hero", affinity: "Undead", min: 0, max: 10 },
 ];
 
 const GameBoard = () => {
@@ -216,6 +219,22 @@ const GameBoard = () => {
     return () => {
       socketRef.current.off("darkgoblin_success");
       socketRef.current.off("darkgoblin_failure");
+    };
+  }, []);
+
+  useEffect(() => {
+    socketRef.current.on("ghastlyghoul_success", ({ stolenCard }) => {
+      setPlayerHand((prev) => [...prev, stolenCard]);
+      alert(`Ghastly Ghoul stole ${stolenCard.name} from opponent!`);
+    });
+
+    socketRef.current.on("ghastlyghoul_failure", ({ message }) => {
+      alert(message);
+    });
+
+    return () => {
+      socketRef.current.off("ghastlyghoul_success");
+      socketRef.current.off("ghastlyghoul_failure");
     };
   }, []);
 
@@ -785,6 +804,35 @@ const GameBoard = () => {
         }
         return;
       }
+
+      if (card.id === 28) { // Assuming 28 is the ID for Ghastly Ghoul
+        if (totalRoll === 10) {
+          alert("Ghastly Ghoul effect activated! Stealing a hero card...");
+          socketRef.current.emit("ghastlyghoul_effect", { 
+            gameId, 
+            playerId: socketRef.current.id 
+          });
+        } else {
+          alert("Ghastly Ghoul effect did not activate.");
+        }
+        return;
+      }
+
+      if (card.id === 25) { // Assuming 25 is the ID for Arachnea
+        if (totalRoll >= 6) {
+          alert("Arachnea effect activated! Drawing a spell card...");
+          const spellCards = cardList.filter((card) => card.type === "Spell");
+          if (spellCards.length > 0) {
+            const randomSpell = spellCards[Math.floor(Math.random() * spellCards.length)];
+            setPlayerHand((prevHand) => [...prevHand, { ...randomSpell, uniqueId: Date.now() + Math.random() }]);
+          } else {
+            alert("No spell cards available to draw!");
+          }
+        } else {
+          alert("Arachnea effect did not activate.");
+        }
+        return;
+      }
     }, 100);
   };
 
@@ -800,20 +848,14 @@ const GameBoard = () => {
     alert("You have drawn a card from the discard pile!");
   };
 
-  const activateDarkGoblinEffect = () => {
-    console.log("Attempting Dark Goblin steal...");
-    console.log("Opponent hand:", opponentHand);
-  
-    if (!opponentHand || opponentHand.length === 0) {
-      alert("Opponent has no cards to steal!");
-      return;
-    }
-  
+  const activateDarkGoblinEffect = useCallback(() => {
+
+    // Emit the effect to the server
     socketRef.current.emit("darkgoblin_effect", { 
-      gameId,
-      playerId: socketRef.current.id
+      gameId, 
+      playerId: socketRef.current.id 
     });
-  };
+  }, [gameId, opponentHand.length]);
 
   const handleBullseyeEffect = () => {
     if (!isMyTurn) {

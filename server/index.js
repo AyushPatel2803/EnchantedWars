@@ -45,9 +45,10 @@ const cardList = [
   { id: 22, name: "TitaniumGiant", type: "Hero", affinity: "Cyborg", min: 0, max: 8 },
   { id: 23, name: "MightyOak", type: "Hero", affinity: "Druid", min: 0, max: 0 },
   { id: 24, name: "BearCleaver", type: "Hero", affinity: "Druid", min: 0, max: 8 },
-  { id: 25, name: "Cerberus", type: "Hero", affinity: "Dark", min: 6, max: 8 },
+  { id: 25, name: "Arachnea", type: "Hero", affinity: "Dark", min: 6, max: 8 },
   { id: 26, name: "Gargoyle", type: "Hero", affinity: "Dark", min: 0, max: 9 },
   { id: 27, name: "Vampire", type: "Hero", affinity: "Undead", min: 0, max: 6 },
+  { id: 28, name: "GhastlyGhoul", type: "Hero", affinity: "Undead", min: 0, max: 10 },
 ];
 
 function createGame(player1, player2) {
@@ -264,25 +265,55 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Steal a random card from the opponent's hand
     const randomIndex = Math.floor(Math.random() * opponentHand.length);
     const stolenCard = opponentHand[randomIndex];
-
+    
+    // Update game state
+    game.playerHands[opponentId] = opponentHand.filter((_, i) => i !== randomIndex);
     game.playerHands[playerId].push(stolenCard);
-    game.playerHands[opponentId].splice(randomIndex, 1);
 
+    // Notify both players
     io.to(playerId).emit("darkgoblin_success", { stolenCard });
-
-    io.to(playerId).emit("update_hands", {
-      yourHand: game.playerHands[playerId],
-      opponentHand: game.playerHands[opponentId],
-    });
-
     io.to(opponentId).emit("update_hands", {
       yourHand: game.playerHands[opponentId],
       opponentHand: game.playerHands[playerId],
     });
 
-    console.log(`Dark Goblin: ${playerId} stole ${stolenCard.name} from ${opponentId}`);
+    console.log(`Dark Goblin effect: Player ${playerId} stole ${stolenCard.name} from ${opponentId}`);
+  });
+
+  socket.on("ghastlyghoul_effect", ({ gameId, playerId }) => {
+    const game = activeGames.get(gameId);
+    if (!game) return;
+
+    const opponentId = game.players.find((p) => p.id !== playerId)?.id;
+    if (!opponentId) return;
+
+    const opponentHand = game.playerHands[opponentId];
+
+    if (opponentHand.length === 0) {
+      io.to(playerId).emit("ghastlyghoul_failure", {
+        message: "Opponent has no cards to steal!",
+      });
+      return;
+    }
+
+    // Steal a random card from the opponent's hand
+    const randomIndex = Math.floor(Math.random() * opponentHand.length);
+    const stolenCard = opponentHand.splice(randomIndex, 1)[0];
+
+    // Add the stolen card to the player's hand
+    game.playerHands[playerId].push(stolenCard);
+
+    // Notify both players
+    io.to(playerId).emit("ghastlyghoul_success", { stolenCard });
+    io.to(opponentId).emit("update_hands", {
+      yourHand: game.playerHands[opponentId],
+      opponentHand: game.playerHands[playerId],
+    });
+
+    console.log(`Ghastly Ghoul effect: Player ${playerId} stole ${stolenCard.name} from ${opponentId}`);
   });
 
   socket.on("player_won", ({ gameId, playerId }) => {
