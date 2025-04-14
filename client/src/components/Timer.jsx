@@ -26,9 +26,9 @@ const Timer = ({ timeLeft }) => {
 const styles = {
     timerContainer: {
         position: "absolute",
-        top: "100px",
+        top: "200px",
         left: "10px",
-        width: "80px",
+        width: "100px",
         height: "80px",
         borderRadius: "50%",
         display: "flex",
@@ -43,9 +43,9 @@ const styles = {
     },
     timerText: {
         margin: 0,
-        fontSize: "20px",
+        fontSize: "42px",
         fontWeight: "bold",
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "GreenFuz, sans-serif",
     },
 };
 

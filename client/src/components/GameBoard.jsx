@@ -47,6 +47,23 @@ import dice4 from "../assets/dice/dice4.png";
 import dice5 from "../assets/dice/dice5.png";
 import dice6 from "../assets/dice/dice6.png";
 
+//winner
+import ChronomancerWinner from "../assets/winnerCards/Chronomancer.png";
+import NaturalGuardianWinner from "../assets/winnerCards/NaturalGuardian.png";
+import TheConsortWinner from "../assets/winnerCards/TheConsort.png";
+import SerperntWispererWinner from "../assets/winnerCards/SerperntWisperer.png";
+import MistressOfDarknessWinner from "../assets/winnerCards/MistressOfDarkness.png";
+import TheSoulkeeperWinner from "../assets/winnerCards/TheSoulkeeper.png";
+
+const winnerImageMap = {
+  "Chronomancer": ChronomancerWinner,
+  "Natural Guardian": NaturalGuardianWinner,
+  "The Consort": TheConsortWinner,
+  "Serpernt Wisperer": SerperntWispererWinner,
+  "Mistress Of Darkness": MistressOfDarknessWinner,
+  "The Soulkeeper": TheSoulkeeperWinner,
+};
+
 const cardImageMap = {
   MooseDruid: MooseDruid,
   DarkGoblin: DarkGoblin,
@@ -112,6 +129,8 @@ const GameBoard = () => {
   const [playedCards, setPlayedCards] = useState(Array(5).fill(null));
   const [discardPile, setDiscardPile] = useState([]);
   const [selectedLeader, setSelectedLeader] = useState(null);
+  const [isWinnerPopupOpen, setIsWinnerPopupOpen] = useState(false);
+  const [winnerLeaderName, setWinnerLeaderName] = useState(null);
   const [timeLeft, setTimeLeft] = useState(60);
   const [playerId, setPlayerId] = useState(null);
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
@@ -139,7 +158,7 @@ const GameBoard = () => {
   const [isWhiteMagePopupOpen, setIsWhiteMagePopupOpen] = useState(false); // Controls the visibility of the White Mage popup
   const [heroCardsInDiscard, setHeroCardsInDiscard] = useState([]); // Stores hero cards in the discard pile for White Mage effect
   const [boostedHeroes, setBoostedHeroes] = useState([]); // Tracks indices of boosted heroes
-
+  const [hoveredCardId, setHoveredCardId] = useState(null);
   useEffect(() => {
     socketRef.current = io("http://localhost:3000", {
       reconnection: true,
@@ -159,7 +178,13 @@ const GameBoard = () => {
       setIsMyTurn(isFirstPlayer);
       setTurnMessage(isFirstPlayer ? "Your turn!" : "Opponent's turn");
       setTimeLeft(60);
-      setPlayerHand(initialHand); // Set the player's initial hand
+      setPlayerHand(
+        initialHand.map(card => ({
+          ...card,
+          image: card.image || cardImageMap[card.name] || DecoyDoll,
+        }))
+      );
+       // Set the player's initial hand
       setActionPoints(3);
     });
 
@@ -406,7 +431,10 @@ const GameBoard = () => {
         }
 
         if (checkWinCondition(newPlayed)) {
-          alert("You win!");
+          console.log("Winner Leader Name:", selectedLeader.name);
+          // Set the winner popup to open and record the winning leader’s name.
+          setWinnerLeaderName(selectedLeader.name);
+          setIsWinnerPopupOpen(true);
           socketRef.current.emit("player_won", { gameId, playerId });
         }
 
@@ -771,6 +799,7 @@ const GameBoard = () => {
         onLeaderSelect={(leader) => {
           setSelectedLeader(leader); // Update the selectedLeader state
           console.log(`Selected Leader: ${leader.name}`); // Debug log
+          console.log("PlayerHand length:", playerHand.length);
         }}
       />
     );
@@ -887,57 +916,87 @@ const GameBoard = () => {
         </div>
         <h2>Player Hand</h2>
         <div style={styles.hand}>
-          {playerHand.map((card) => (
-            <div
-              key={`hand-${card.uniqueId}`}
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData("card", JSON.stringify(card))}
-              style={{ ...styles.card, position: "relative" }}
-              onMouseEnter={() => card.type === "Spell" && setHoveredSpell(card)}
-              onMouseLeave={() => card.type === "Spell" && setHoveredSpell(null)}
-            >
-              <img
-                src={cardImageMap[card.name]} // Dynamically map card name to image
-                alt={card.name}
-                style={styles.cardImage}
-              />
-              {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
-                <div style={styles.spellEffectContainer}>
-                  <button
-                    onClick={() => castSpell(card)}
-                    style={styles.spellEffectButton}
-                  >
-                    Cast Spell
-                  </button>
+            {playerHand.map((card, index) => {
+              // Calculate the parameters for the fan-out effect:
+              const totalCards = playerHand.length;
+              const centerIndex = (totalCards - 1) / 2;
+              const fanAngle = (index - centerIndex) * 15; // rotation in degrees
+              const offsetX = (index - centerIndex) * 40;    // horizontal offset in pixels
+
+              // Determine if this card is currently hovered
+              const isHovered = hoveredCardId === card.uniqueId;
+
+              // Build the transform property; pop up effect if hovered:
+              const transform = `translateX(${offsetX}px) translateX(-50%) rotate(${fanAngle}deg) ${isHovered ? "scale(1.2) translateY(-10px)" : ""}`;
+
+              // Create the final style with a transition
+              const cardStyle = {
+                ...styles.card,
+                position: "absolute",
+                left: "50%",
+                transform: transform,
+                zIndex: index,
+                transition: "transform 0.2s ease-in-out",
+              };
+
+              return (
+                <div
+                  key={`hand-${card.uniqueId}`}
+                  draggable
+                  onDragStart={(e) =>
+                    e.dataTransfer.setData("card", JSON.stringify(card))
+                  }
+                  onMouseEnter={() => {
+                    setHoveredCardId(card.uniqueId);
+                    if (card.type === "Spell") setHoveredSpell(card);
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredCardId(null);
+                    if (card.type === "Spell") setHoveredSpell(null);
+                  }}
+                  style={cardStyle}
+                >
+                  <img
+                    src={cardImageMap[card.name]}
+                    alt={card.name}
+                    style={styles.cardImage}
+                  />
+                  {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
+                    <div style={styles.spellEffectContainer}>
+                      <button onClick={() => castSpell(card)} style={styles.spellEffectButton}>
+                        Cast Spell
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={styles.discardContainer}>
+            <div style={styles.discardPile}>
+              {discardPile.length > 0 ? (
+                <div style={styles.card}>
+                  <img
+                    src={discardPile[discardPile.length - 1]?.image}
+                    alt="Last Discarded Card"
+                    style={styles.cardImage}
+                  />
+                </div>
+              ) : (
+                <div style={styles.slot}>
+                  <div style={styles.emptySlot}>Discard Pile</div>
                 </div>
               )}
             </div>
-          ))}
-        </div>
-        <div style={styles.discardContainer}>
-          <div style={styles.discardPile}>
-            {discardPile.length > 0 ? (
-              <div style={styles.card}>
-                <img
-                  src={discardPile[discardPile.length - 1].image}
-                  alt="Last Discarded Card"
-                  style={styles.cardImage}
-                />
-              </div>
-            ) : (
-              <div style={styles.slot}>
-                <div style={styles.emptySlot}>Discard Pile</div>
-              </div>
-            )}
+            <button
+              onClick={discardAllCards}
+              style={!isMyTurn ? styles.disabledButton : styles.discardButton}
+              disabled={!isMyTurn}
+            >
+              Discard
+            </button>
           </div>
-          <button
-            onClick={discardAllCards}
-            style={!isMyTurn ? styles.disabledButton : styles.discardButton}
-            disabled={!isMyTurn}
-          >
-            Discard
-          </button>
-        </div>
         <div style={styles.actionPointsContainer}>
           <h3 style={styles.actionPointsText}>Action Points: {actionPoints}</h3>
         </div>
@@ -1168,23 +1227,57 @@ const GameBoard = () => {
           </div>
         )}
       </div>
+        {isWinnerPopupOpen && winnerLeaderName && (
+        <div style={styles.winnerOverlay}>
+          <div style={styles.winnerContainer}>
+            <img
+              src={winnerImageMap[winnerLeaderName]}
+              alt={`${winnerLeaderName} Wins!`}
+              style={styles.winnerImage}
+            />
+            <div style={styles.winnerText}>Winner!</div>
+            <button 
+              onClick={() => setIsWinnerPopupOpen(false)}
+              style={styles.winnerCloseButton}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
 const styles = {
   gameBoard: {
+    // We keep your existing properties except height, background, etc.
     position: "relative",
+    margin: "0 auto",
+    border: "none",
+    boxSizing: "border-box",
     textAlign: "center",
     padding: "1vh",
-    border: "3px solid black",
-    background: "#162C24",
-    height: "90vh",
-    maxWidth: "1400px",
-    margin: "0 auto",
     display: "flex",
     flexDirection: "column",
+  
+    // Use width so it can grow/shrink, but keep a maxWidth if you like
+    width: "100%",
+    maxWidth: "1400px",
+  
+    /* If you want to prevent the layout from squishing too much:
+       minWidth: "1200px",
+       That way, if the window is narrower than 1200px, a horizontal scrollbar appears
+       rather than having elements overlap. Uncomment if needed:
+    */
+    // minWidth: "1200px",
+    
+    /* Remove any fixed or max height here so it won't force empty space or clipping */
   },
+  
+  
+
   playerNameContainer: {
     position: "absolute",
     top: "1vh",
@@ -1204,11 +1297,12 @@ const styles = {
     animation: "pulse 1s infinite",
   },
   playerNameText: {
-    margin: 0,
-    fontSize: "1.4rem",
+    margin: 2,
+    fontSize: "2.5rem",
     fontWeight: "bold",
     color: "white",
-    textShadow: "1px 1px 4px rgba(0, 0, 0, 0.6)",
+    textShadow: "1px 1px 4px rgb(255, 0, 0)",
+    fontFamily: "GreenFuz, sans-serif",
   },
   playerInfo: {
     position: "absolute",
@@ -1230,12 +1324,11 @@ const styles = {
     padding: "0 1vw",
   },
   hand: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "0.5vw",
-    flexWrap: "wrap",
+    position: "relative",
+    height: "220px", // Adjust as needed to fit your card height and rotation effect
     margin: "1vh 0",
-    padding: "0 1vw",
+    overflow: "visible",
+    // Removed flex layout properties since we use absolute positioning for the fan effect
   },
   card: {
     width: "calc(120px + 1vw)",
@@ -1315,12 +1408,13 @@ const styles = {
     padding: "10px 20px",
     borderRadius: "8px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-    fontSize: "16px",
+    fontSize: "32px",
     fontWeight: "bold",
     border: "2px solid #B22222",
   },
   actionPointsText: {
     margin: 0,
+    fontFamily: "GreenFuz, sans-serif",
   },
   endTurnButton: {
     position: "absolute",
@@ -1463,6 +1557,46 @@ const styles = {
     fontSize: "0.8rem",
     fontWeight: "bold",
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+  },
+  winnerOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  winnerContainer: {
+    backgroundColor: "#fff",
+    borderRadius: "10px",
+    padding: "30px",
+    textAlign: "center",
+    boxShadow: "0 0 20px rgba(0, 0, 0, 0.4)",
+  },
+  winnerImage: {
+    width: "300px",      // adjust this size as needed
+    height: "auto",
+    marginBottom: "15px",
+  },
+  winnerText: {
+    fontSize: "2rem",
+    fontWeight: "bold",
+    color: "#4CAF50",    // green; adjust as needed
+    marginBottom: "20px",
+  },
+  winnerCloseButton: {
+    padding: "10px 20px",
+    backgroundColor: "#4CAF50",    // same green as winnerText
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "1rem",
+    transition: "background-color 0.2s ease",
   },
 };
 

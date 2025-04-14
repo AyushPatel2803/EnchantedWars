@@ -1,17 +1,120 @@
 /* GameBoard.css */
+/* Remove default browser spacing & fill the entire page with your background color */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #162C24; /* So there's no white behind your game board */
+  }
+  
+  /* The main container used by GameBoard.jsx */
+  .game-board-container {
+    position: relative;
+    width: 100%;
+    height: 100%;     /* This container now fills the entire browser window */
+    overflow: auto;   /* Scroll if content is larger than window */
+    box-sizing: border-box;
+  }
+  
+  
 * {
     box-sizing: border-box;
 }
 
-body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
-}
+/* Responsive Design for GameBoard */
 
-.game-board-container {
-    height: 100vh;
-    width: 100vw;
-    overflow: auto;
-}
+/* For tablets and screens up to 768px wide */
+@media (max-width: 768px) {
+    /* Adjust overall container padding */
+    .game-board-container {
+      padding: 10px;
+    }
+    
+    /* If you assigned a class to your gameBoard (the inner container) in GameBoard.jsx,
+       override inline styles using !important if necessary */
+    .gameBoard {
+      max-width: 100% !important;
+      padding: 5px !important;
+    }
+    
+    /* Adjust the player name container and text */
+    .playerNameContainer {
+      padding: 8px;
+      font-size: 1.2rem;
+    }
+    .playerNameText {
+      font-size: 1.8rem;
+    }
+  
+    /* Adjust the hand container height so fanned-out cards remain visible */
+    .hand {
+      height: 180px !important;  /* reduce from 220px if needed */
+    }
+  
+    /* Scale down the card sizes */
+    .card {
+      width: calc(100px + 1vw) !important;
+      height: calc(140px + 1vh) !important;
+    }
+    
+    /* Ensure opponent play area and play area wrap properly */
+    .opponentPlayArea,
+    .playArea {
+      flex-wrap: wrap;
+    }
+    
+    /* Adjust action points container */
+    .actionPointsContainer {
+      font-size: 1rem;
+      padding: 8px 12px;
+    }
+    
+    /* Style buttons (end turn, discard, etc.) */
+    .endTurnButton,
+    .discardButton {
+      width: 90%;
+      max-width: 300px;
+      padding: 8px;
+      font-size: 0.9rem;
+    }
+  }
+  
+  /* For mobile devices and screens up to 480px wide */
+  @media (max-width: 480px) {
+    .game-board-container {
+      padding: 5px;
+    }
+    
+    .playerNameText {
+      font-size: 1rem !important;
+    }
+    
+    .hand {
+        position: relative;
+        height: 220px;       /* controlled by media queries for smaller screens */
+        margin-top: 1vh;
+        overflow: visible;
+      }
+      
+      .card {
+        position: absolute;
+        left: 50%;
+        /* card width/height from media queries if you like */
+        transition: transform 0.2s ease-in-out;
+        cursor: grab;
+      }
+    
+    .actionPointsContainer {
+      font-size: 0.8rem;
+      padding: 6px 10px;
+    }
+    
+    .endTurnButton,
+    .discardButton {
+      width: 100%;
+      max-width: 250px;
+      padding: 6px;
+      font-size: 0.8rem;
+    }
+  }
+  
