@@ -118,8 +118,8 @@ const cardImageMap = {
 
 const cardList = [
   { id: 1, name: "EmberLeaf", image: EmberLeaf, type: "Hero", affinity: "Druid", min: 0, max: 10 },
-  { id: 2, name: "DarkGoblin", image: DarkGoblin, type: "Hero", affinity: "Cyborg", min: 0, max: 6 },
-  { id: 3, name: "ChimeraMask", image: ChimeraMask, type: "Item", affinity: "Cyborg" },
+  { id: 2, name: "DarkGoblin", image: DarkGoblin, type: "Hero", affinity: "Dark", min: 0, max: 6 },
+  { id: 3, name: "ChimeraMask", image: ChimeraMask, type: "Item", affinity: "Dark" },
   { id: 4, name: "DruidMask", image: DruidMask, type: "Item", affinity: "Druid" },
   { id: 5, name: "CriticalBoost", image: CriticalBoost, type: "Spell", affinity: null },
   { id: 6, name: "LostSoul", image: LostSoul, type: "Hero", affinity: "Undead", min: 0, max: 6 },
@@ -588,9 +588,9 @@ const GameBoard = () => {
           boost: isRagnarokActivated ? 3 : 0, // Apply Ragnarok boost if active
         };
 
+        // Check the win condition after updating played cards
         if (checkWinCondition(newPlayed)) {
           console.log("Winner Leader Name:", selectedLeader.name);
-          // Set the winner popup to open and record the winning leader’s name.
           setWinnerLeaderName(selectedLeader.name);
           setIsWinnerPopupOpen(true);
           socketRef.current.emit("player_won", { gameId, playerId });
