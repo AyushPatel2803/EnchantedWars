@@ -5,7 +5,7 @@ import PartyLeaderSelection from "./PartyLeaderSelection";
 import OpponentCardSlot from "./OpponentCardSlot";
 import { io } from "socket.io-client";
 import "./GameBoard.css";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import DiscardSelectionModal from './DiscardSelectionModal';
 
 //heros
@@ -78,7 +78,7 @@ import TheSoulkeeperLoser from "../assets/winnerCards/TheSoulkeeperLoser.png";
 const loserImageMap  = {
   "chronomancer": ChronomancerLoser,
   "nature guardian": NaturalGuardianLoser,
-  "the consort": TheConsortLoser,
+  "the consort": NaturalGuardianLoser,
   "the serpent": SerperntWispererLoser,
   "mistress of darkness": MistressOfDarknessLoser,
   "the soulkeeper": TheSoulkeeperLoser,
@@ -149,6 +149,7 @@ const cardList = [
 
 const GameBoard = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize the navigate function
   const { playerName } = location.state || { playerName: "Player" };
 
   const [playerHand, setPlayerHand] = useState([]);
@@ -412,6 +413,20 @@ const GameBoard = () => {
       return newPlayed;
     });
   }, [playedCards]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      navigate("/"); // Navigate back to the main page
+    };
+
+    // Add event listener for page refresh or navigation away
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      // Clean up the event listener
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [navigate]);
 
   const handleEndTurn = useCallback(() => {
     if (!isMyTurn) return;
@@ -1700,12 +1715,9 @@ const GameBoard = () => {
               style={styles.winnerImage}
             />
             <div style={styles.winnerText}>Winner!</div>
-            <button 
-              onClick={() => setIsWinnerPopupOpen(false)}
-              style={styles.winnerCloseButton}
-            >
-              Continue
-            </button>
+            <p style={{ fontSize: "1rem", color: "#555", marginTop: "10px" }}>
+              Press <strong>Back</strong> to return to the main page or <strong>Refresh</strong> to play again if the other player also refreshes.
+            </p>
           </div>
         </div>
       )}
@@ -1720,12 +1732,9 @@ const GameBoard = () => {
                   style={styles.loserImage}
                 />
                 <div style={styles.loserText}>You Lose!</div>
-                <button 
-                  onClick={() => setIsLoserPopupOpen(false)}
-                  style={styles.loserCloseButton}
-                >
-                  Continue
-                </button>
+                <p style={{ fontSize: "1rem", color: "#555", marginTop: "10px" }}>
+                  Press <strong>Back</strong> to return to the main page or <strong>Refresh</strong> to play again if the other player also refreshes.
+                </p>
               </div>
             </div>
           )}
@@ -1957,7 +1966,7 @@ const styles = {
   },
   spellEffectButton: {
     backgroundColor: "linear-gradient(90deg, #4CAF50, #2E7D32)",
-    color: "white",
+    color: "purple",
     border: "none",
     padding: "8px 15px",
     borderRadius: "8px",
