@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./MainPage.css";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import TitlePNG from "./assets/Enchanted Wars.png";
 
 const socket = io("http://localhost:3000"); // Connect to backend
 
@@ -32,20 +33,34 @@ function MainPage() {
   };
 
   return (
-    <div className="main-page">
-      <h1>Welcome to the Game</h1>
-      <div className="actions">
+    <div className="background-wrapper">
+    <div className="main-container">
+    <img src={TitlePNG} alt="Enchanted Wars" className="title-image" />      <div className="actions">
         <input
           type="text"
           placeholder="Enter your name"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
+          className="name-input"
         />
-        <button onClick={handleFindMatch} disabled={isSearching || !playerName}>
-          {isSearching ? "Searching..." : "Find Match"}
+        <div className="button-row">
+          <button
+            className="modern-button"
+            onClick={handleFindMatch}
+            disabled={isSearching || !playerName}
+          >
+            {isSearching ? "Searching..." : "Find Match"}
+          </button>
+          <button
+            className="modern-button"
+            onClick={() => navigate("/local-game")}
+          >
+            Local Match
         </button>
       </div>
     </div>
+  </div>
+</div>
   );
 }
 
