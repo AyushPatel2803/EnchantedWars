@@ -1,60 +1,71 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-// Import all card images
-import MooseDruid from '../assets/heros/MooseDruid.png';
-import DarkGoblin from '../assets/heros/DarkGoblin.png';
-import LostSoul from '../assets/heros/LostSoul.png';
-import Bullseye from '../assets/heros/Bullseye.png';
-import Hydra from '../assets/heros/Hydra.png';
-import Cyborg20xx from '../assets/heros/Cyborg20xx.png';
-import BearCleaver from '../assets/heros/BearCleaver.png';
-import Cerberus from '../assets/heros/Cerberus.png';
-import Gargoyle from '../assets/heros/Gargoyle.png';
-import Gorgon from '../assets/heros/Gorgon.png';
-import MightyOak from '../assets/heros/MightyOak.png';
-import Ragnarok from '../assets/heros/Ragnarok.png';
-import TimeMachine from '../assets/heros/TimeMachine.png';
-import TitaniumGiant from '../assets/heros/TitaniumGiant.png';
-import Vampire from '../assets/heros/Vampire.png';
-import WhiteMage from '../assets/heros/WhiteMage.png';
-import WingedSerpent from '../assets/heros/WingedSerpent.png';
-import DruidMask from '../assets/items/DruidMask.png';
-import DecoyDoll from '../assets/items/DecoyDoll.png';
-import RoboMask from '../assets/items/RoboMask.png';
-import SerpentMask from '../assets/items/SerpentMask.png';
-import SpectreMask from '../assets/items/SpectreMask.png';
-import CriticalBoost from '../assets/spell/CriticalBoost.png';
-import MAD from '../assets/spell/MAD.png';
-import Switcheroo from '../assets/spell/Switcheroo.png';
+//heros
+import EmberLeaf from "../assets/heros/EmberLeaf.png";
+import DarkGoblin from "../assets/heros/DarkGoblin.png";
+import LostSoul from "../assets/heros/LostSoul.png";
+import Bullseye from "../assets/heros/Bullseye.png";
+import TwinSnakes from "../assets/heros/TwinSnakes.png";
+import Cyborg20xx from "../assets/heros/Cyborg20xxx.png";
+import BearCleaver from "../assets/heros/BearCleaver.png";
+import Arachnea from "../assets/heros/Arachnea.png";
+import Gorgon from "../assets/heros/Gorgon1.png";
+import MightyOak from "../assets/heros/MightyOak.png";
+import Ragnarok from "../assets/heros/Ragnarok.png";
+import TheInventor from "../assets/heros/TheInventor.png";
+import TitaniumGiant from "../assets/heros/TitaniumGiant.png";
+import Vampire from "../assets/heros/Vampire.png";
+import WhiteMage from "../assets/heros/WhiteMage.png";
+import WingedSerpent from "../assets/heros/WingedSerpent.png";
+import GhastlyGhoul from "../assets/heros/GhastlyGhoul.png";
+
+//items
+import DruidMask from "../assets/items/DruidMask.png";
+import RoboMask from "../assets/items/RoboMask.png";
+import SerpentMask from "../assets/items/SerpentMask.png";
+import SpectreMask from "../assets/items/SpectreMask.png";
+import ChimeraMask from "../assets/items/ChimeraMask.png";
+import ConsortMask from "../assets/items/ConsortHelmet.png";
+
+//spells
+import CriticalBoost from "../assets/spell/CriticalBoost.png";
+import DiamondRing from "../assets/spell/DiamondRing.png";
+import FreeDraw from "../assets/spell/FreeDraw.png";
+// import MAD from "../assets/spell/MAD.png";
+// import Switcheroo from "../assets/spell/Switcheroo.png";
+
 
 // Card image mapping
 const cardImageMap = {
-  MooseDruid,
-  DarkGoblin,
-  LostSoul,
-  Bullseye,
-  Hydra,
-  Cyborg20xx,
-  BearCleaver,
-  Cerberus,
-  Gargoyle,
-  Gorgon,
-  MightyOak,
-  Ragnarok,
-  TimeMachine,
-  TitaniumGiant,
-  Vampire,
-  WhiteMage,
-  WingedSerpent,
-  DruidMask,
-  DecoyDoll,
-  RoboMask,
-  SerpentMask,
-  SpectreMask,
-  CriticalBoost,
-  MAD,
-  Switcheroo,
+  EmberLeaf: EmberLeaf,
+  DarkGoblin: DarkGoblin,
+  DruidMask: DruidMask,
+  CriticalBoost: CriticalBoost,
+  LostSoul: LostSoul,
+  Bullseye: Bullseye,
+  TwinSnakes: TwinSnakes,
+  Cyborg20xx: Cyborg20xx,
+  BearCleaver: BearCleaver,
+  Arachnea: Arachnea,
+  Gorgon: Gorgon,
+  MightyOak: MightyOak,
+  Ragnarok: Ragnarok,
+  TheInventor: TheInventor,
+  TitaniumGiant: TitaniumGiant,
+  Vampire: Vampire,
+  WhiteMage: WhiteMage,
+  WingedSerpent: WingedSerpent,
+  RoboMask: RoboMask,
+  SerpentMask: SerpentMask,
+  SpectreMask: SpectreMask,
+  ChimeraMask: ChimeraMask,
+  ConsortMask: ConsortMask,
+  // MAD: MAD,
+  // Switcheroo: Switcheroo,
+  GhastlyGhoul: GhastlyGhoul,
+  DiamondRing: DiamondRing,
+  FreeDraw: FreeDraw,
 };
 
 const OpponentCardSlot = ({ card }) => {

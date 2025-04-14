@@ -216,7 +216,7 @@ const GameBoard = () => {
       setPlayerHand(
         initialHand.map(card => ({
           ...card,
-          image: card.image || cardImageMap[card.name] || DecoyDoll,
+          image: card.image || cardImageMap[card.name],
         }))
       );
        // Set the player's initial hand
