@@ -21,7 +21,7 @@ import Gargoyle from "../assets/heros/Gargoyle.png";
 import Gorgon from "../assets/heros/Gorgon.png";
 import MightyOak from "../assets/heros/MightyOak.png";
 import Ragnarok from "../assets/heros/Ragnarok.png";
-import TimeMachine from "../assets/heros/TimeMachine.png";
+import TheInventor from "../assets/heros/TheInventor.png";
 import TitaniumGiant from "../assets/heros/TitaniumGiant.png";
 import Vampire from "../assets/heros/Vampire.png";
 import WhiteMage from "../assets/heros/WhiteMage.png";
@@ -63,7 +63,7 @@ const cardImageMap = {
   Gorgon: Gorgon,
   MightyOak: MightyOak,
   Ragnarok: Ragnarok,
-  TimeMachine: TimeMachine,
+  TheInventor: TheInventor,
   TitaniumGiant: TitaniumGiant,
   Vampire: Vampire,
   WhiteMage: WhiteMage,
@@ -94,7 +94,7 @@ const cardList = [
   { id: 18, name: "WingedSerpent", image: WingedSerpent, type: "Hero", affinity: "Serpentine", min: 0, max: 7 },
   { id: 19, name: "Ragnarok", image: Ragnarok, type: "Hero", affinity: "Consort", min: 0, max: 6 },
   { id: 20, name: "WhiteMage", image: WhiteMage, type: "Hero", affinity: "Consort", min: 0, max: 7 },
-  { id: 21, name: "TimeMachine", image: TimeMachine, type: "Hero", affinity: "Cyborg", min: 0, max: 11 },
+  { id: 21, name: "TheInventor", image: TheInventor, type: "Hero", affinity: "Cyborg", min: 0, max: 8 },
   { id: 22, name: "TitaniumGiant", image: TitaniumGiant, type: "Hero", affinity: "Cyborg", min: 0, max: 8 },
   { id: 23, name: "MightyOak", image: MightyOak, type: "Hero", affinity: "Druid", min: 0, max: 0 },
   { id: 24, name: "BearCleaver", image: BearCleaver, type: "Hero", affinity: "Druid", min: 0, max: 8 },
@@ -134,11 +134,12 @@ const GameBoard = () => {
   const [heroItems, setHeroItems] = useState({});
   const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
   const [opponentHand, setOpponentHand] = useState([]);
-  const [isBullseyePopupOpen, setIsBullseyePopupOpen] = useState(false); // Controls the visibility of the Bullseye popup
-  const [discardPreviewCards, setDiscardPreviewCards] = useState([]); // Stores the cards to preview for discard
-  const [isWhiteMagePopupOpen, setIsWhiteMagePopupOpen] = useState(false); // Controls the visibility of the White Mage popup
-  const [heroCardsInDiscard, setHeroCardsInDiscard] = useState([]); // Stores hero cards in the discard pile for White Mage effect
-  const [boostedHeroes, setBoostedHeroes] = useState([]); // Tracks indices of boosted heroes
+  const [isBullseyePopupOpen, setIsBullseyePopupOpen] = useState(false);
+  const [discardPreviewCards, setDiscardPreviewCards] = useState([]);
+  const [isWhiteMagePopupOpen, setIsWhiteMagePopupOpen] = useState(false);
+  const [heroCardsInDiscard, setHeroCardsInDiscard] = useState([]);
+  const [boostedHeroes, setBoostedHeroes] = useState([]);
+  const [isRagnarokActivated, setIsRagnarokActivated] = useState(false);
 
   useEffect(() => {
     socketRef.current = io("http://localhost:3000", {
@@ -159,15 +160,7 @@ const GameBoard = () => {
       setIsMyTurn(isFirstPlayer);
       setTurnMessage(isFirstPlayer ? "Your turn!" : "Opponent's turn");
       setTimeLeft(60);
-      setPlayerHand(initialHand); // Set the player's initial hand
-      setActionPoints(3);
-    });
-
-    socketRef.current.on("turn_update", ({ currentPlayerId }) => {
-      setCurrentPlayerId(currentPlayerId);
-      setIsMyTurn(currentPlayerId === socketRef.current.id);
-      setTurnMessage(currentPlayerId === socketRef.current.id ? "Your turn!" : "Opponent's turn");
-      setTimeLeft(60);
+      setPlayerHand(initialHand);
       setActionPoints(3);
     });
 
@@ -229,12 +222,11 @@ const GameBoard = () => {
   useEffect(() => {
     socketRef.current.on("update_hands", ({ yourHand, opponentHand }) => {
       console.log("Updating hands:");
-      console.log("Your hand:", yourHand); // Debug log for your hand
-      console.log("Opponent's hand:", opponentHand); // Debug log for opponent's hand
+      console.log("Your hand:", yourHand);
+      console.log("Opponent's hand:", opponentHand);
 
-      // Ensure both hands are properly updated
-      setPlayerHand(yourHand || []); // Default to an empty array if yourHand is undefined
-      setOpponentHand(opponentHand || []); // Default to an empty array if opponentHand is undefined
+      setPlayerHand(yourHand || []);
+      setOpponentHand(opponentHand || []);
     });
 
     return () => {
@@ -244,12 +236,12 @@ const GameBoard = () => {
 
   useEffect(() => {
     socketRef.current.on("card_played", ({ slotIndex, card }) => {
-      console.log("Received card played:", card); // Debug log
+      console.log("Received card played:", card);
       setOpponentPlayedCards((prev) => {
         const newPlayed = [...prev];
         newPlayed[slotIndex] = {
           ...card,
-          image: cardImageMap[card.name], // Ensure the image is properly set using the mapping
+          image: cardImageMap[card.name], // Map the correct image using card name
         };
         return newPlayed;
       });
@@ -260,8 +252,57 @@ const GameBoard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    socketRef.current.on("game_reset", ({ message, initialHand }) => {
+      alert(message);
+
+      setPlayerHand(initialHand);
+      setOpponentPlayedCards(Array(5).fill(null));
+      setPlayedCards(Array(5).fill(null));
+      setDiscardPile([]);
+      setSelectedLeader(null);
+      setTimeLeft(60);
+      setActionPoints(3);
+      setDiceRolls({ first: null, second: null, bonus: null });
+      setHoveredSpell(null);
+      setHoveredCardIndex(null);
+      setTurnMessage("");
+    });
+
+    return () => {
+      socketRef.current.off("game_reset");
+    };
+  }, []);
+
+  useEffect(() => {
+    socketRef.current.on("turn_update", ({ currentPlayerId }) => {
+      setCurrentPlayerId(currentPlayerId);
+      setIsMyTurn(currentPlayerId === socketRef.current.id);
+      setTurnMessage(currentPlayerId === socketRef.current.id ? "Your turn!" : "Opponent's turn");
+      setTimeLeft(60);
+      setActionPoints(3);
+    });
+
+    return () => {
+      socketRef.current.off("turn_update");
+    };
+  }, []);
+
   const handleEndTurn = useCallback(() => {
     if (!isMyTurn) return;
+
+    // Reset all boosts to 0 at the end of the turn
+    setPlayedCards((prev) =>
+      prev.map((hero) =>
+        hero && hero.type === "Hero"
+          ? { ...hero, boost: 0 } // Reset boost to 0
+          : hero
+      )
+    );
+
+    setBoostedHeroes([]); // Clear the list of boosted heroes
+    setIsRagnarokActivated(false); // Reset Ragnarok activation state
+
     socketRef.current.emit("end_turn");
     setIsMyTurn(false);
     setTurnMessage("Waiting for opponent's turn...");
@@ -287,9 +328,20 @@ const GameBoard = () => {
     const shuffledCards = [...cardList].sort(() => Math.random() - 0.5);
     return shuffledCards.slice(0, count).map(card => ({
       ...card,
-      uniqueId: Date.now() + Math.random(), // Add a unique ID
-      name: card.name || `Card${card.id}`, // Ensure the name property is included
-      image: card.image || cardImageMap[card.name] || DecoyDoll, // Ensure the image property is included
+      uniqueId: Date.now() + Math.random(),
+      name: card.name || `Card${card.id}`,
+      image: cardImageMap[card.name] || DecoyDoll,
+    }));
+  };
+
+  const getRandomItemCards = (count = 3) => {
+    const itemCards = cardList.filter(card => card.type === "Item");
+    const shuffledItems = [...itemCards].sort(() => Math.random() - 0.5);
+    return shuffledItems.slice(0, count).map(card => ({
+      ...card,
+      uniqueId: Date.now() + Math.random(),
+      name: card.name || `Card${card.id}`,
+      image: cardImageMap[card.name] || DecoyDoll,
     }));
   };
 
@@ -379,26 +431,27 @@ const GameBoard = () => {
       setPlayerHand((prev) => prev.filter((c) => c.uniqueId !== card.uniqueId));
       setPlayedCards((prev) => {
         const newPlayed = [...prev];
-        newPlayed[slotIndex] = card;
+        newPlayed[slotIndex] = {
+          ...card,
+          boost: isRagnarokActivated ? 3 : 0, // Apply Ragnarok boost if active
+        };
 
-        // Apply Mighty Oak effect
-        if (card.id === 23) { // Mighty Oak ID
+        if (card.id === 23) {
           if (slotIndex > 0 && newPlayed[slotIndex - 1]?.type === "Hero") {
-            newPlayed[slotIndex - 1].boost = 2; // Add boost to the left hero
+            newPlayed[slotIndex - 1].boost = 2;
           }
           if (slotIndex < newPlayed.length - 1 && newPlayed[slotIndex + 1]?.type === "Hero") {
-            newPlayed[slotIndex + 1].boost = 2; // Add boost to the right hero
+            newPlayed[slotIndex + 1].boost = 2;
           }
         }
 
-        // Apply Hydra effect
-        if (card.id === 8) { // Hydra ID
+        if (card.id === 8) {
           newPlayed.forEach((playedCard, index) => {
             if (playedCard && index !== slotIndex && playedCard.type === "Hero") {
               newPlayed[index] = {
                 ...playedCard,
-                boost: (playedCard.boost || 0) + 1, // Add +1 boost to all other heroes
-                hydraEffect: true, // Add Hydra effect indicator
+                boost: (playedCard.boost || 0) + 1,
+                hydraEffect: true,
               };
             }
           });
@@ -536,23 +589,66 @@ const GameBoard = () => {
       return;
     }
   
+    if (actionPoints <= 0) {
+      alert("You don't have enough action points to roll!");
+      return;
+    }
+  
+    // Deduct 1 action point for the roll
+    setActionPoints((prev) => prev - 1);
+  
+    const boost = card.boost || 0; // Include any boosts
     const firstRoll = Math.floor(Math.random() * 6) + 1;
     const secondRoll = Math.floor(Math.random() * 6) + 1;
-    const totalRoll = firstRoll + secondRoll;
+    const totalRoll = firstRoll + secondRoll + boost;
   
     setDiceRolls({ first: firstRoll, second: secondRoll });
   
     setTimeout(() => {
-      alert(`You rolled a ${totalRoll}!`);
+      alert(`You rolled a ${totalRoll}${boost > 0 ? ` (including +${boost} boost)` : ''}!`);
   
-      // BearCleaver effect (ID 24)
+      // Ragnarok effect (ID 19)
+      if (card.id === 19) { // Ragnarok ID
+        if (totalRoll >= 6) {
+          if (isRagnarokActivated) {
+            alert("Ragnarok effect has already been activated this turn!");
+            return;
+          }
+  
+          alert("Ragnarok effect activated! +3 to all hero rolls until the end of the turn.");
+          setBoostedHeroes((prev) => [...prev, ...playedCards.map((_, index) => index)]); // Track boosted heroes
+          setPlayedCards((prev) =>
+            prev.map((hero) =>
+              hero && hero.type === "Hero"
+                ? { ...hero, boost: (hero.boost || 0) + 3 } // Add +3 boost to all heroes
+                : hero
+            )
+          );
+          setIsRagnarokActivated(true); // Mark the effect as activated
+        } else {
+          alert("Ragnarok effect did not activate.");
+        }
+        return;
+      }
+  
+      // The Inventor effect (ID 21)
+      if (card.id === 21) {
+        if (totalRoll >= 8) {
+          alert("The Inventor effect activated! Drawing 3 item cards...");
+          const newItemCards = getRandomItemCards(3);
+          setPlayerHand((prevHand) => [...prevHand, ...newItemCards]);
+        } else {
+          alert("The Inventor effect did not activate.");
+        }
+        return;
+      }
+  
       if (card.id === 24) {
         if (totalRoll >= 8) {
           alert("BearCleaver effect activated! Drawing 2 cards...");
           const newCards = getRandomCards(2);
           setPlayerHand((prevHand) => [...prevHand, ...newCards]);
   
-          // Check if one of the drawn cards is a spell
           const hasSpell = newCards.some((newCard) => newCard.type === "Spell");
           if (hasSpell) {
             alert("A spell card was drawn! Destroying a random hero card in your hand...");
@@ -561,7 +657,6 @@ const GameBoard = () => {
               const randomHeroIndex = Math.floor(Math.random() * heroCards.length);
               const cardToDestroy = heroCards[randomHeroIndex];
   
-              // Remove the destroyed card from the player's hand
               setPlayerHand((prevHand) =>
                 prevHand.filter((handCard) => handCard.uniqueId !== cardToDestroy.uniqueId)
               );
@@ -577,7 +672,6 @@ const GameBoard = () => {
         return;
       }
   
-      // Winged Serpent effect (ID 18)
       if (card.id === 18) {
         if (totalRoll >= 7) {
           alert("Winged Serpent effect activated! Drawing cards until you have 7 cards in your hand.");
@@ -595,7 +689,6 @@ const GameBoard = () => {
         return;
       }
   
-      // Vampire effect (ID 27)
       if (card.id === 27) {
         if (totalRoll >= 6) {
           alert("Vampire effect activated! Drawing 2 cards...");
@@ -607,14 +700,12 @@ const GameBoard = () => {
         return;
       }
   
-      // TitaniumGiant effect (ID 22)
       if (card.id === 22) {
         if (totalRoll >= 8) {
           alert("TitaniumGiant effect activated! Drawing 2 cards...");
           const newCards = getRandomCards(2);
           setPlayerHand((prevHand) => [...prevHand, ...newCards]);
   
-          // Check if one of the drawn cards is a Cyborg
           const hasCyborg = newCards.some((newCard) => newCard.affinity === "Cyborg");
           if (hasCyborg) {
             alert("A Cyborg card was drawn! Destroying a random hero card in your hand...");
@@ -623,7 +714,6 @@ const GameBoard = () => {
               const randomHeroIndex = Math.floor(Math.random() * heroCards.length);
               const cardToDestroy = heroCards[randomHeroIndex];
   
-              // Remove the destroyed card from the player's hand
               setPlayerHand((prevHand) =>
                 prevHand.filter((handCard) => handCard.uniqueId !== cardToDestroy.uniqueId)
               );
@@ -639,13 +729,11 @@ const GameBoard = () => {
         return;
       }
   
-      // LostSoul effect (ID 6)
       if (card.id === 6) {
         handleLostSoulEffect();
         return;
       }
   
-      // Dark Goblin effect (ID 2)
       if (card.id === 2) {
         if (totalRoll >= 6) {
           activateDarkGoblinEffect();
@@ -655,24 +743,33 @@ const GameBoard = () => {
         return;
       }
   
-      // MooseDruid effect (ID 1)
       if (card.id === 1) {
-        if (totalRoll === 8) {
-          setIsOpponentHeroPopupOpen(true);
+        if (totalRoll >= 8) {
+          alert("MooseDruid effect activated! Destroying an opponent's hero card...");
+          socketRef.current.emit("moosedruid_effect", { 
+            gameId, 
+            playerId,
+            destroyOpponentCard: true
+          });
         } else if (totalRoll <= 4) {
+          alert("MooseDruid has been destroyed!");
+          socketRef.current.emit("moosedruid_effect", { 
+            gameId, 
+            playerId,
+            slotIndex,
+            destroyOpponentCard: false
+          });
           setPlayedCards((prev) => {
             const newPlayed = [...prev];
             newPlayed[slotIndex] = null;
             return newPlayed;
           });
-          alert("MooseDruid has been destroyed!");
         } else {
           alert("Nothing happens.");
         }
         return;
       }
-
-      // White Mage effect (ID 20)
+  
       if (card.id === 20) {
         if (totalRoll >= 7) {
           alert("White Mage effect activated! Searching discard pile for a hero card...");
@@ -699,21 +796,19 @@ const GameBoard = () => {
   
     const lastDiscardedCard = discardPile[discardPile.length - 1];
     setPlayerHand((prevHand) => [...prevHand, lastDiscardedCard]);
-    setDiscardPile((prev) => prev.slice(0, -1)); // Remove the last card from the discard pile
+    setDiscardPile((prev) => prev.slice(0, -1));
     alert("You have drawn a card from the discard pile!");
   };
 
   const activateDarkGoblinEffect = () => {
     console.log("Attempting Dark Goblin steal...");
-    console.log("Opponent hand:", opponentHand); // Debug log
+    console.log("Opponent hand:", opponentHand);
   
-    // Check if opponentHand is defined and has cards
     if (!opponentHand || opponentHand.length === 0) {
       alert("Opponent has no cards to steal!");
       return;
     }
   
-    // Notify server to handle the steal
     socketRef.current.emit("darkgoblin_effect", { 
       gameId,
       playerId: socketRef.current.id
@@ -731,8 +826,7 @@ const GameBoard = () => {
       return;
     }
 
-    // Get top 3 cards from discard pile (or fewer if there aren't enough)
-    const topCards = discardPile.slice(-3).reverse(); // Reverse to show most recent first
+    const topCards = discardPile.slice(-3).reverse();
     setDiscardPreviewCards(topCards);
     setIsBullseyePopupOpen(true);
   };
@@ -740,14 +834,12 @@ const GameBoard = () => {
   const handleCardSelect = (selectedIndex) => {
     if (selectedIndex < 0 || selectedIndex >= discardPreviewCards.length) return;
 
-    // Add selected card to hand
     const selectedCard = discardPreviewCards[selectedIndex];
     setPlayerHand((prev) => [...prev, selectedCard]);
 
-    // Remove selected card from discard pile and return others
     const newDiscardPile = [...discardPile];
-    const selectedCardIndex = newDiscardPile.length - 1 - selectedIndex; // Find original index
-    newDiscardPile.splice(selectedCardIndex, 1); // Remove selected card
+    const selectedCardIndex = newDiscardPile.length - 1 - selectedIndex;
+    newDiscardPile.splice(selectedCardIndex, 1);
     
     setDiscardPile(newDiscardPile);
     setIsBullseyePopupOpen(false);
@@ -756,12 +848,8 @@ const GameBoard = () => {
   const handleWhiteMageSelect = (selectedCard) => {
     if (!selectedCard) return;
 
-    // Add selected card to hand
     setPlayerHand((prev) => [...prev, selectedCard]);
-
-    // Remove selected card from discard pile
     setDiscardPile((prev) => prev.filter((card) => card.uniqueId !== selectedCard.uniqueId));
-
     setIsWhiteMagePopupOpen(false);
   };
 
@@ -769,8 +857,8 @@ const GameBoard = () => {
     return (
       <PartyLeaderSelection 
         onLeaderSelect={(leader) => {
-          setSelectedLeader(leader); // Update the selectedLeader state
-          console.log(`Selected Leader: ${leader.name}`); // Debug log
+          setSelectedLeader(leader);
+          console.log(`Selected Leader: ${leader.name}`);
         }}
       />
     );
@@ -821,18 +909,27 @@ const GameBoard = () => {
                     style={styles.cardImage}
                   />
                   {card.boost && (
-                    <div style={styles.boostIndicator}>+{card.boost}</div> // Add boost indicator
+                    <div style={styles.boostIndicator}>+{card.boost}</div>
                   )}
                   {card.hydraEffect && (
-                    <div style={styles.hydraCircle}>+1</div> // Add Hydra effect green circle
+                    <div style={styles.hydraCircle}>+1</div>
+                  )}
+                  {heroItems[index] && (
+                    <div style={styles.itemIndicator}>
+                      <img
+                        src={cardImageMap[heroItems[index].name]}
+                        alt={heroItems[index].name}
+                        style={styles.itemImage}
+                      />
+                    </div>
                   )}
                   {card.type === "Hero" && hoveredCardIndex === index && (
                     <button
                       style={styles.heroActionButton}
                       onClick={() => {
-                        if (card.id === 7) { // Bullseye card
+                        if (card.id === 7) {
                           handleBullseyeEffect();
-                        } else if (card.id === 8) { // Hydra card
+                        } else if (card.id === 8) {
                           alert("Hydra effect is passive and already applied!");
                         } else {
                           handleHeroRoll(card, index);
@@ -1463,6 +1560,24 @@ const styles = {
     fontSize: "0.8rem",
     fontWeight: "bold",
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+  },
+  itemIndicator: {
+    position: "absolute",
+    bottom: "5px",
+    left: "5px",
+    width: "30px",
+    height: "30px",
+    borderRadius: "50%",
+    backgroundColor: "#fff",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+  },
+  itemImage: {
+    width: "20px",
+    height: "20px",
+    objectFit: "contain",
   },
 };
 

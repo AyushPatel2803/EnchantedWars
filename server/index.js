@@ -4,9 +4,9 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const path = require("path");
 
-const app = express(); // Initialize the app first
-app.use(cors()); // Use CORS middleware
-app.use("/assets", express.static(path.join(__dirname, "assets"))); // Serve static files
+const app = express();
+app.use(cors());
+app.use("/assets", express.static(path.join(__dirname, "assets")));
 
 const server = http.createServer(app);
 
@@ -41,7 +41,7 @@ const cardList = [
   { id: 18, name: "WingedSerpent", type: "Hero", affinity: "Serpentine", min: 0, max: 7 },
   { id: 19, name: "Ragnarok", type: "Hero", affinity: "Consort", min: 0, max: 6 },
   { id: 20, name: "WhiteMage", type: "Hero", affinity: "Consort", min: 0, max: 7 },
-  { id: 21, name: "TimeMachine", type: "Hero", affinity: "Cyborg", min: 0, max: 11 },
+  { id: 21, name: "TheInventor", type: "Hero", affinity: "Cyborg", min: 0, max: 11 },
   { id: 22, name: "TitaniumGiant", type: "Hero", affinity: "Cyborg", min: 0, max: 8 },
   { id: 23, name: "MightyOak", type: "Hero", affinity: "Druid", min: 0, max: 0 },
   { id: 24, name: "BearCleaver", type: "Hero", affinity: "Druid", min: 0, max: 8 },
@@ -50,11 +50,8 @@ const cardList = [
   { id: 27, name: "Vampire", type: "Hero", affinity: "Undead", min: 0, max: 6 },
 ];
 
-// Utility function to create a new game
 function createGame(player1, player2) {
   const gameId = Math.random().toString(36).substring(7);
-
-  // Create and shuffle a single deck
   const shuffledDeck = [...cardList].sort(() => Math.random() - 0.5);
 
   const gameState = {
@@ -71,10 +68,9 @@ function createGame(player1, player2) {
       [player1.id]: [],
       [player2.id]: [],
     },
-    deck: shuffledDeck, // Keep track of the remaining cards in the deck
+    deck: shuffledDeck,
   };
 
-  // Deal cards from the same deck
   gameState.playerHands[player1.id] = dealCardsFromDeck(gameState.deck, 5);
   gameState.playerHands[player2.id] = dealCardsFromDeck(gameState.deck, 5);
 
@@ -82,24 +78,13 @@ function createGame(player1, player2) {
   return gameState;
 }
 
-// Utility function to deal cards
-function dealCards(count) {
-  const shuffledCards = [...cardList].sort(() => Math.random() - 0.5);
-  return shuffledCards.slice(0, count).map(card => ({ 
-    ...card, 
-    uniqueId: Date.now() + Math.random() // Add a unique ID to each card
-  }));
-}
-
-// Utility function to deal cards from a deck
 function dealCardsFromDeck(deck, count) {
   return deck.splice(0, count).map(card => ({
     ...card,
-    uniqueId: Date.now() + Math.random() // Add a unique ID to each card
+    uniqueId: Date.now() + Math.random()
   }));
 }
 
-// Utility function to log game state
 function logGameState(gameId) {
   const game = activeGames.get(gameId);
   if (game) {
@@ -114,6 +99,7 @@ function logGameState(gameId) {
   }
 }
 
+// Handle MooseDruid effect
 io.on("connection", (socket) => {
   playerCount++;
   console.log("\n👤 New connection:", socket.id);
@@ -123,40 +109,27 @@ io.on("connection", (socket) => {
     console.log(`\n🔍 ${username} (${socket.id}) is searching for a match...`);
 
     if (waitingPlayer) {
-      const player1 = {
-        id: waitingPlayer.id,
-        username: waitingPlayer.username,
-      };
-
-      const player2 = {
-        id: socket.id,
-        username: username,
-      };
-
-      // Create new game
+      const player1 = { id: waitingPlayer.id, username: waitingPlayer.username };
+      const player2 = { id: socket.id, username: username };
       const game = createGame(player1, player2);
 
-      // Add players to the game room
       socket.join(game.id);
       io.sockets.sockets.get(player1.id)?.join(game.id);
 
-      // Notify Player 1
       io.to(player1.id).emit("match_found", {
         opponent: player2.username,
         gameId: game.id,
         isFirstPlayer: true,
-        initialHand: game.playerHands[player1.id], // Player 1's unique hand
+        initialHand: game.playerHands[player1.id],
       });
 
-      // Notify Player 2
       io.to(player2.id).emit("match_found", {
         opponent: player1.username,
         gameId: game.id,
         isFirstPlayer: false,
-        initialHand: game.playerHands[player2.id], // Player 2's unique hand
+        initialHand: game.playerHands[player2.id],
       });
 
-      // Start first player's turn
       io.to(game.id).emit("turn_update", {
         currentPlayerId: player1.id,
         gameId: game.id,
@@ -165,31 +138,75 @@ io.on("connection", (socket) => {
       waitingPlayer = null;
       logGameState(game.id);
     } else {
-      waitingPlayer = {
-        id: socket.id,
-        username: username,
-      };
+      waitingPlayer = { id: socket.id, username: username };
       console.log(`⏳ ${username} added to waiting queue`);
     }
   });
 
-  // Handle turn ending
+  // Handle MooseDruid effect
+  socket.on("moosedruid_effect", ({ gameId, playerId, slotIndex }) => {
+    const game = activeGames.get(gameId);
+    if (!game) {
+      console.error(`Game not found: ${gameId}`);
+      return;
+    }
+
+    const opponentId = game.players.find((p) => p.id !== playerId)?.id;
+    if (!opponentId) {
+      console.error(`Opponent not found for player ${playerId} in game ${gameId}`);
+      return;
+    }
+
+    let targetPlayerId, targetSlotIndex;
+
+    if (slotIndex !== undefined) {
+      // Destroy an opponent's hero card
+      targetPlayerId = opponentId;
+      targetSlotIndex = slotIndex;
+    } else {
+      // Destroy MooseDruid itself
+      targetPlayerId = playerId;
+      targetSlotIndex = game.playedCards[playerId].findIndex(
+        (card) => card?.id === 1 // MooseDruid ID
+      );
+
+      if (targetSlotIndex === -1) {
+        console.error("MooseDruid not found in player's played cards.");
+        return;
+      }
+    }
+
+    // Update game state
+    game.playedCards[targetPlayerId][targetSlotIndex] = null;
+
+    // Notify both players
+    io.to(gameId).emit("card_destroyed", {
+      slotIndex: targetSlotIndex,
+      playerId: targetPlayerId,
+      message:
+        slotIndex !== undefined
+          ? "MooseDruid destroyed an opponent's hero card!"
+          : "MooseDruid was destroyed!",
+    });
+
+    console.log(
+      `MooseDruid effect: Destroyed card in slot ${targetSlotIndex} for player ${targetPlayerId}`
+    );
+  });
+
   socket.on("end_turn", () => {
     for (let [gameId, game] of activeGames) {
       const playerIndex = game.players.findIndex(p => p.id === socket.id);
       
       if (playerIndex !== -1 && playerIndex === game.currentPlayerIndex) {
-        // Switch to next player
         game.currentPlayerIndex = (playerIndex + 1) % 2;
         const nextPlayer = game.players[game.currentPlayerIndex];
         
         console.log(`\n🔄 Turn ended in game ${gameId}`);
         console.log(`Next player: ${nextPlayer.username}`);
 
-        // Reset turn timer
         game.turnTimeLeft = 60;
 
-        // Notify players about turn change
         io.to(gameId).emit("turn_update", {
           currentPlayerId: nextPlayer.id,
           gameId: gameId
@@ -201,14 +218,11 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Handle card played
   socket.on("card_played", ({ gameId, slotIndex, card }) => {
     const game = activeGames.get(gameId);
     if (game && game.players[game.currentPlayerIndex].id === socket.id) {
-      // Update game state
       game.playedCards[socket.id][slotIndex] = card;
       
-      // Broadcast card played to opponent
       socket.to(gameId).emit("card_played", { 
         slotIndex, 
         card,
@@ -220,7 +234,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Handle card destruction
   socket.on("destroy_card", ({ gameId, playerId, slotIndex }) => {
     const game = activeGames.get(gameId);
     if (!game) {
@@ -228,15 +241,10 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Find the opponent's ID
     const opponentId = game.players.find(p => p.id !== playerId).id;
-
-    // Update the game state to remove the card
     game.playedCards[opponentId][slotIndex] = null;
 
-    // Notify both players about the card destruction
     io.to(gameId).emit("card_destroyed", { slotIndex, playerId: opponentId });
-
     console.log(`Card in slot ${slotIndex} destroyed for player ${opponentId} in game ${gameId}`);
   });
 
@@ -256,18 +264,14 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Steal a random card
     const randomIndex = Math.floor(Math.random() * opponentHand.length);
     const stolenCard = opponentHand[randomIndex];
 
-    // Update hands
     game.playerHands[playerId].push(stolenCard);
     game.playerHands[opponentId].splice(randomIndex, 1);
 
-    // Notify players
     io.to(playerId).emit("darkgoblin_success", { stolenCard });
 
-    // Sync hands
     io.to(playerId).emit("update_hands", {
       yourHand: game.playerHands[playerId],
       opponentHand: game.playerHands[opponentId],
@@ -283,18 +287,44 @@ io.on("connection", (socket) => {
 
   socket.on("player_won", ({ gameId, playerId }) => {
     const game = activeGames.get(gameId);
-
     if (!game) {
       console.error(`Game not found: ${gameId}`);
       return;
     }
 
-    // Broadcast the win to both players
     io.to(gameId).emit("game_over", { winner: playerId });
     console.log(`Player ${playerId} won the game in game ${gameId}`);
-
-    // Optionally, clean up the game
     activeGames.delete(gameId);
+  });
+
+  socket.on("reset_game", ({ gameId, playerId }) => {
+    console.log(`Player ${playerId} triggered a game reset for game ${gameId}`);
+
+    const game = activeGames.get(gameId);
+    if (game) {
+      game.currentPlayerIndex = 0;
+      game.turnTimeLeft = 60;
+      game.playedCards = {
+        [game.players[0].id]: Array(5).fill(null),
+        [game.players[1].id]: Array(5).fill(null),
+      };
+      
+      // Reset the deck and deal new hands
+      const newDeck = [...cardList].sort(() => Math.random() - 0.5);
+      game.deck = newDeck;
+      game.playerHands = {
+        [game.players[0].id]: dealCardsFromDeck(newDeck, 5),
+        [game.players[1].id]: dealCardsFromDeck(newDeck, 5),
+      };
+
+      io.to(game.id).emit("game_reset", {
+        message: "The game has been reset by Time Machine!",
+        initialHand: socket.id === game.players[0].id ? 
+          game.playerHands[game.players[0].id] : 
+          game.playerHands[game.players[1].id],
+      });
+      logGameState(gameId);
+    }
   });
 
   socket.on("disconnect", () => {
@@ -302,19 +332,16 @@ io.on("connection", (socket) => {
     console.log("\n👋 Player disconnected:", socket.id);
     console.log("📊 Total players connected:", playerCount);
 
-    // Remove from waiting queue if applicable
     if (waitingPlayer && waitingPlayer.id === socket.id) {
       console.log("❌ Removed from waiting queue:", waitingPlayer.username);
       waitingPlayer = null;
     }
 
-    // Handle active game disconnection
     activeGames.forEach((game, gameId) => {
       const disconnectedPlayer = game.players.find(p => p.id === socket.id);
       if (disconnectedPlayer) {
         console.log(`\n🚫 Game ${gameId} ended - ${disconnectedPlayer.username} disconnected`);
         
-        // Notify other player
         const otherPlayer = game.players.find(p => p.id !== socket.id);
         if (otherPlayer) {
           io.to(otherPlayer.id).emit("opponent_disconnected", {
@@ -322,9 +349,8 @@ io.on("connection", (socket) => {
           });
         }
 
-        // Clean up game
         game.isActive = false;
-        io.socketsLeave(gameId); // Remove all sockets from the game room
+        io.socketsLeave(gameId);
         activeGames.delete(gameId);
       }
     });
