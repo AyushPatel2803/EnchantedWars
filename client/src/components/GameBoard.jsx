@@ -9,16 +9,15 @@ import { useLocation } from "react-router-dom";
 import DiscardSelectionModal from './DiscardSelectionModal';
 
 //heros
-import MooseDruid from "../assets/heros/MooseDruid.png";
+import EmberLeaf from "../assets/heros/EmberLeaf.png";
 import DarkGoblin from "../assets/heros/DarkGoblin.png";
 import LostSoul from "../assets/heros/LostSoul.png";
 import Bullseye from "../assets/heros/Bullseye.png";
-import Hydra from "../assets/heros/Hydra.png";
-import Cyborg20xx from "../assets/heros/Cyborg20xx.png";
+import TwinSnakes from "../assets/heros/TwinSnakes.png";
+import Cyborg20xx from "../assets/heros/Cyborg20xxx.png";
 import BearCleaver from "../assets/heros/BearCleaver.png";
 import Arachnea from "../assets/heros/Arachnea.png";
-import Gargoyle from "../assets/heros/Gargoyle.png";
-import Gorgon from "../assets/heros/Gorgon.png";
+import Gorgon from "../assets/heros/Gorgon1.png";
 import MightyOak from "../assets/heros/MightyOak.png";
 import Ragnarok from "../assets/heros/Ragnarok.png";
 import TheInventor from "../assets/heros/TheInventor.png";
@@ -30,15 +29,18 @@ import GhastlyGhoul from "../assets/heros/GhastlyGhoul.png";
 
 //items
 import DruidMask from "../assets/items/DruidMask.png";
-import DecoyDoll from "../assets/items/DecoyDoll.png";
 import RoboMask from "../assets/items/RoboMask.png";
 import SerpentMask from "../assets/items/SerpentMask.png";
 import SpectreMask from "../assets/items/SpectreMask.png";
+import ChimeraMask from "../assets/items/ChimeraMask.png";
+import ConsortMask from "../assets/items/ConsortHelmet.png";
 
 //spells
 import CriticalBoost from "../assets/spell/CriticalBoost.png";
-import MAD from "../assets/spell/MAD.png";
-import Switcheroo from "../assets/spell/Switcheroo.png";
+import DiamondRing from "../assets/spell/DiamondRing.png";
+import FreeDraw from "../assets/spell/FreeDraw.png";
+// import MAD from "../assets/spell/MAD.png";
+// import Switcheroo from "../assets/spell/Switcheroo.png";
 
 //dice
 import dice1 from "../assets/dice/dice1.png";
@@ -49,18 +51,16 @@ import dice5 from "../assets/dice/dice5.png";
 import dice6 from "../assets/dice/dice6.png";
 
 const cardImageMap = {
-  MooseDruid: MooseDruid,
+  EmberLeaf: EmberLeaf,
   DarkGoblin: DarkGoblin,
   DruidMask: DruidMask,
-  DecoyDoll: DecoyDoll,
   CriticalBoost: CriticalBoost,
   LostSoul: LostSoul,
   Bullseye: Bullseye,
-  Hydra: Hydra,
+  TwinSnakes: TwinSnakes,
   Cyborg20xx: Cyborg20xx,
   BearCleaver: BearCleaver,
   Arachnea: Arachnea,
-  Gargoyle: Gargoyle,
   Gorgon: Gorgon,
   MightyOak: MightyOak,
   Ragnarok: Ragnarok,
@@ -72,25 +72,30 @@ const cardImageMap = {
   RoboMask: RoboMask,
   SerpentMask: SerpentMask,
   SpectreMask: SpectreMask,
-  MAD: MAD,
-  Switcheroo: Switcheroo,
+  ChimeraMask: ChimeraMask,
+  ConsortMask: ConsortMask,
+  // MAD: MAD,
+  // Switcheroo: Switcheroo,
   GhastlyGhoul: GhastlyGhoul,
+  DiamondRing: DiamondRing,
+  FreeDraw: FreeDraw,
 };
 
 const cardList = [
-  { id: 1, name: "MooseDruid", image: MooseDruid, type: "Hero", affinity: "Druid", min: 4, max: 8 },
-  { id: 2, name: "DarkGoblin", image: DarkGoblin, type: "Hero", affinity: "Dark", min: 0, max: 6 },
-  { id: 3, name: "DruidMask", image: DruidMask, type: "Item", affinity: "Druid" },
-  { id: 4, name: "DecoyDoll", image: DecoyDoll, type: "Item", affinity: null },
+  { id: 1, name: "EmberLeaf", image: EmberLeaf, type: "Hero", affinity: "Druid", min: 0, max: 10 },
+  { id: 2, name: "DarkGoblin", image: DarkGoblin, type: "Hero", affinity: "Cyborg", min: 0, max: 6 },
+  { id: 3, name: "ChimeraMask", image: ChimeraMask, type: "Item", affinity: "Cyborg" },
+  { id: 4, name: "DruidMask", image: DruidMask, type: "Item", affinity: "Druid" },
   { id: 5, name: "CriticalBoost", image: CriticalBoost, type: "Spell", affinity: null },
   { id: 6, name: "LostSoul", image: LostSoul, type: "Hero", affinity: "Undead", min: 0, max: 6 },
   { id: 7, name: "Bullseye", image: Bullseye, type: "Hero", affinity: "Consort", min: 0, max: 4 },
-  { id: 8, name: "Hydra", image: Hydra, type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
+  { id: 8, name: "TwinSnakes", image: TwinSnakes, type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
   { id: 9, name: "Cyborg20xx", image: Cyborg20xx, type: "Hero", affinity: "Cyborg", min: 4, max: 10 },
-  { id: 10, name: "Switcheroo", image: Switcheroo, type: "Spell" },
-  { id: 11, name: "MAD", image: MAD, type: "Spell" },
+  // { id: 10, name: "Switcheroo", image: Switcheroo, type: "Spell" },
+  // { id: 11, name: "MAD", image: MAD, type: "Spell" },
   { id: 12, name: "RoboMask", image: RoboMask, type: "Item", affinity: "Cyborg" },
   { id: 13, name: "SpectreMask", image: SpectreMask, type: "Item", affinity: "Undead" },
+  { id: 14, name: "ConsortMask", image: ConsortMask, type: "Item", affinity: "Consort" },
   { id: 15, name: "SerpentMask", image: SerpentMask, type: "Item", affinity: "Serpentine" },
   { id: 17, name: "Gorgon", image: Gorgon, type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
   { id: 18, name: "WingedSerpent", image: WingedSerpent, type: "Hero", affinity: "Serpentine", min: 0, max: 7 },
@@ -101,9 +106,10 @@ const cardList = [
   { id: 23, name: "MightyOak", image: MightyOak, type: "Hero", affinity: "Druid", min: 0, max: 0 },
   { id: 24, name: "BearCleaver", image: BearCleaver, type: "Hero", affinity: "Druid", min: 0, max: 8 },
   { id: 25, name: "Arachnea", image: Arachnea, type: "Hero", affinity: "Dark", min: 6, max: 8 },
-  { id: 26, name: "Gargoyle", image: Gargoyle, type: "Hero", affinity: "Dark", min: 0, max: 9 },
   { id: 27, name: "Vampire", image: Vampire, type: "Hero", affinity: "Undead", min: 0, max: 6 },
   { id: 28, name: "GhastlyGhoul", image: GhastlyGhoul, type: "Hero", affinity: "Undead", min: 0, max: 10 },
+  { id: 29, name: "DiamondRing", image: DiamondRing, type: "Spell", affinity: null },
+  { id: 30, name: "FreeDraw", image: FreeDraw, type: "Spell", affinity: null },
 ];
 
 const GameBoard = () => {
@@ -143,6 +149,9 @@ const GameBoard = () => {
   const [heroCardsInDiscard, setHeroCardsInDiscard] = useState([]);
   const [boostedHeroes, setBoostedHeroes] = useState([]);
   const [isRagnarokActivated, setIsRagnarokActivated] = useState(false);
+  const [opponentRollPenalty, setOpponentRollPenalty] = useState(0);
+  const [isGorgonPopupOpen, setIsGorgonPopupOpen] = useState(false);
+  const [itemCardsInDiscard, setItemCardsInDiscard] = useState([]);
 
   useEffect(() => {
     socketRef.current = io("http://localhost:3000", {
@@ -255,7 +264,6 @@ const GameBoard = () => {
 
   useEffect(() => {
     socketRef.current.on("card_played", ({ slotIndex, card }) => {
-      console.log("Received card played:", card);
       setOpponentPlayedCards((prev) => {
         const newPlayed = [...prev];
         newPlayed[slotIndex] = {
@@ -307,14 +315,48 @@ const GameBoard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    setPlayedCards((prev) => {
+      const newPlayed = [...prev];
+
+      prev.forEach((card, index) => {
+        if (card?.id === 23) { // MightyOak ID
+          // Check and apply effect to the left slot
+          if (index > 0 && newPlayed[index - 1]?.type === "Hero" && !newPlayed[index - 1].mightyOakBoostApplied) {
+            newPlayed[index - 1] = {
+              ...newPlayed[index - 1],
+              boost: (newPlayed[index - 1].boost || 0) + 2,
+              mightyOakBoost: true,
+              mightyOakBoostApplied: true, // Mark as boosted
+            };
+          }
+          // Check and apply effect to the right slot
+          if (index < newPlayed.length - 1 && newPlayed[index + 1]?.type === "Hero" && !newPlayed[index + 1].mightyOakBoostApplied) {
+            newPlayed[index + 1] = {
+              ...newPlayed[index + 1],
+              boost: (newPlayed[index + 1].boost || 0) + 2,
+              mightyOakBoost: true,
+              mightyOakBoostApplied: true, // Mark as boosted
+            };
+          }
+        }
+      });
+
+      return newPlayed;
+    });
+  }, [playedCards]);
+
   const handleEndTurn = useCallback(() => {
     if (!isMyTurn) return;
 
-    // Reset all boosts to 0 at the end of the turn
+    // Reset all boosts except MightyOak's and Hydra's effects
     setPlayedCards((prev) =>
       prev.map((hero) =>
         hero && hero.type === "Hero"
-          ? { ...hero, boost: 0 } // Reset boost to 0
+          ? {
+              ...hero,
+              boost: hero.mightyOakBoost ? 2 : hero.hydraBoost ? hero.boost : 0, // Keep +2 for MightyOak, retain Hydra's boost
+            }
           : hero
       )
     );
@@ -349,7 +391,7 @@ const GameBoard = () => {
       ...card,
       uniqueId: Date.now() + Math.random(),
       name: card.name || `Card${card.id}`,
-      image: cardImageMap[card.name] || DecoyDoll,
+      image: cardImageMap[card.name],
     }));
   };
 
@@ -360,7 +402,7 @@ const GameBoard = () => {
       ...card,
       uniqueId: Date.now() + Math.random(),
       name: card.name || `Card${card.id}`,
-      image: cardImageMap[card.name] || DecoyDoll,
+      image: cardImageMap[card.name],
     }));
   };
 
@@ -406,7 +448,7 @@ const GameBoard = () => {
 
       setActionPoints((prev) => prev - 1);
 
-      if (card.id === 13) {
+      if (card.id === 13) { // SpectreMask
         setPlayedCards((prev) => {
           const newPlayed = [...prev];
           newPlayed[slotIndex] = {
@@ -417,12 +459,45 @@ const GameBoard = () => {
         });
       }
 
-      if (card.id === 15) {
+      if (card.id === 15) { // SerpentMask
         setPlayedCards((prev) => {
           const newPlayed = [...prev];
           newPlayed[slotIndex] = {
             ...newPlayed[slotIndex],
             affinity: "Serpentine",
+          };
+          return newPlayed;
+        });
+      }
+
+      if (card.id === 3) { // ChimeraMask
+        setPlayedCards((prev) => {
+          const newPlayed = [...prev];
+          newPlayed[slotIndex] = {
+            ...newPlayed[slotIndex],
+            affinity: "Dark", // Change affinity to Dark
+          };
+          return newPlayed;
+        });
+      }
+
+      if (card.id === 4) { // DruidMask
+        setPlayedCards((prev) => {
+          const newPlayed = [...prev];
+          newPlayed[slotIndex] = {
+            ...newPlayed[slotIndex],
+            affinity: "Druid", // Change affinity to Druid
+          };
+          return newPlayed;
+        });
+      }
+
+      if (card.id === 14) { // ConsortMask
+        setPlayedCards((prev) => {
+          const newPlayed = [...prev];
+          newPlayed[slotIndex] = {
+            ...newPlayed[slotIndex],
+            affinity: "Consort", // Change affinity to Consort
           };
           return newPlayed;
         });
@@ -438,15 +513,6 @@ const GameBoard = () => {
     }
 
     if (card.type === "Hero") {
-      const existingAffinities = playedCards
-        .filter((c) => c !== null)
-        .map((c) => c.affinity);
-
-      if (existingAffinities.includes(card.affinity)) {
-        alert(`You cannot play a card with the same affinity (${card.affinity}) as one already played!`);
-        return;
-      }
-
       setPlayerHand((prev) => prev.filter((c) => c.uniqueId !== card.uniqueId));
       setPlayedCards((prev) => {
         const newPlayed = [...prev];
@@ -454,28 +520,6 @@ const GameBoard = () => {
           ...card,
           boost: isRagnarokActivated ? 3 : 0, // Apply Ragnarok boost if active
         };
-
-        if (card.id === 23) {
-          if (slotIndex > 0 && newPlayed[slotIndex - 1]?.type === "Hero") {
-            newPlayed[slotIndex - 1].boost = 2;
-          }
-          if (slotIndex < newPlayed.length - 1 && newPlayed[slotIndex + 1]?.type === "Hero") {
-            newPlayed[slotIndex + 1].boost = 2;
-          }
-        }
-
-        if (card.id === 8) {
-          newPlayed.forEach((playedCard, index) => {
-            if (playedCard && index !== slotIndex && playedCard.type === "Hero") {
-              newPlayed[index] = {
-                ...playedCard,
-                boost: (playedCard.boost || 0) + 1,
-                hydraEffect: true,
-              };
-            }
-          });
-          alert("Hydra effect activated! All other heroes gain +1 boost to their rolls.");
-        }
 
         if (checkWinCondition(newPlayed)) {
           alert("You win!");
@@ -503,7 +547,7 @@ const GameBoard = () => {
 
     if (!checkActionPoints()) return;
 
-    setDiscardPile((prev) => [...prev, ...playerHand]);
+    setDiscardPile((prev) => [...prev, ...playerHand.map(card => ({ ...card, image: cardImageMap[card.name] }))]);
     setPlayerHand(getRandomCards());
     setActionPoints((prev) => prev - 2);
   };
@@ -523,15 +567,46 @@ const GameBoard = () => {
       return;
     }
 
-    if (card.id === 5) {
+    if (card.id === 5) { // CriticalBoost
       setIsCriticalBoostPopupOpen(true);
       setCriticalBoostCard(card);
       return;
     }
 
-    if (card.id === 11) {
+    if (card.id === 11) { // MAD
       setIsMADPopupOpen(true);
       setMADSpellCard(card);
+      return;
+    }
+
+    if (card.id === 29) { // DiamondRing
+      alert("DiamondRing effect activated! You gain 1 extra action point.");
+      
+      // Increase the player's action points
+      setActionPoints((prev) => prev + 1);
+
+      // Move the spell card to the discard pile
+      setPlayerHand((prevHand) =>
+        prevHand.filter((c) => c.uniqueId !== card.uniqueId)
+      );
+      setDiscardPile((prev) => [...prev, { ...card, image: cardImageMap[card.name] }]);
+
+      return;
+    }
+
+    if (card.id === 30) { // FreeDraw
+      alert("FreeDraw effect activated! Drawing a card without costing an action point.");
+      
+      // Draw a random card
+      const randomCard = { ...cardList[Math.floor(Math.random() * cardList.length)], uniqueId: Date.now() + Math.random() };
+      setPlayerHand((prevHand) => [...prevHand, randomCard]);
+
+      // Move the spell card to the discard pile
+      setPlayerHand((prevHand) =>
+        prevHand.filter((c) => c.uniqueId !== card.uniqueId)
+      );
+      setDiscardPile((prev) => [...prev, { ...card, image: cardImageMap[card.name] }]);
+
       return;
     }
 
@@ -548,12 +623,12 @@ const GameBoard = () => {
     setPlayerHand((prevHand) =>
       prevHand.filter((card) => card.uniqueId !== selectedCardToDiscard.uniqueId)
     );
-    setDiscardPile((prev) => [...prev, selectedCardToDiscard]);
+    setDiscardPile((prev) => [...prev, { ...selectedCardToDiscard, image: cardImageMap[selectedCardToDiscard.name] }]);
 
     setPlayerHand((prevHand) =>
       prevHand.filter((card) => card.uniqueId !== criticalBoostCard.uniqueId)
     );
-    setDiscardPile((prev) => [...prev, criticalBoostCard]);
+    setDiscardPile((prev) => [...prev, { ...criticalBoostCard, image: cardImageMap[criticalBoostCard.name] }]);
 
     const newCards = getRandomCards(3);
     setPlayerHand((prevHand) => [...prevHand, ...newCards]);
@@ -568,14 +643,14 @@ const GameBoard = () => {
       alert("Please select exactly two cards to discard!");
       return;
     }
-  
+
     setPlayerHand((prevHand) =>
       prevHand.filter((card) => !selectedCardsToDiscard.includes(card))
     );
-    setDiscardPile((prev) => [...prev, ...selectedCardsToDiscard]);
-  
-    setDiscardPile((prev) => [...prev, madSpellCard]);
-  
+    setDiscardPile((prev) => [...prev, ...selectedCardsToDiscard.map(card => ({ ...card, image: cardImageMap[card.name] }))]);
+
+    setDiscardPile((prev) => [...prev, { ...madSpellCard, image: cardImageMap[madSpellCard.name] }]);
+
     setIsMADPopupOpen(false);
     setIsOpponentHeroPopupOpen(true);
   };
@@ -617,16 +692,17 @@ const GameBoard = () => {
     setActionPoints((prev) => prev - 1);
   
     const boost = card.boost || 0; // Include any boosts
+    const hydraBoost = card.hydraBoost ? 1 : 0; // Add +1 if affected by Hydra
     const firstRoll = Math.floor(Math.random() * 6) + 1;
     const secondRoll = Math.floor(Math.random() * 6) + 1;
-    const totalRoll = firstRoll + secondRoll + boost;
+    const totalRoll = firstRoll + secondRoll + boost + hydraBoost;
   
     setDiceRolls({ first: firstRoll, second: secondRoll });
   
     setTimeout(() => {
-      alert(`You rolled a ${totalRoll}${boost > 0 ? ` (including +${boost} boost)` : ''}!`);
+      alert(`You rolled a ${totalRoll}${boost > 0 || hydraBoost > 0 ? ` (including +${boost + hydraBoost} boost)` : ''}!`);
   
-      // Ragnarok effect (ID 19)
+      // Add logic for specific hero effects here (e.g., Ragnarok, Arachnea, etc.)
       if (card.id === 19) { // Ragnarok ID
         if (totalRoll >= 6) {
           if (isRagnarokActivated) {
@@ -762,29 +838,25 @@ const GameBoard = () => {
         return;
       }
   
-      if (card.id === 1) {
-        if (totalRoll >= 8) {
-          alert("MooseDruid effect activated! Destroying an opponent's hero card...");
-          socketRef.current.emit("moosedruid_effect", { 
-            gameId, 
-            playerId,
-            destroyOpponentCard: true
-          });
-        } else if (totalRoll <= 4) {
-          alert("MooseDruid has been destroyed!");
-          socketRef.current.emit("moosedruid_effect", { 
-            gameId, 
-            playerId,
-            slotIndex,
-            destroyOpponentCard: false
-          });
-          setPlayedCards((prev) => {
-            const newPlayed = [...prev];
-            newPlayed[slotIndex] = null;
-            return newPlayed;
-          });
+      if (card.id === 1) { // EmberLeaf ID
+        if (totalRoll >= 10) {
+          alert("EmberLeaf effect activated! Searching discard pile for a hero card...");
+          const heroCards = discardPile.filter((discardedCard) => discardedCard.type === "Hero");
+          if (heroCards.length > 0) {
+            setHeroCardsInDiscard(heroCards);
+            setIsWhiteMagePopupOpen(true); // Reuse the White Mage popup for hero selection
+          } else {
+            alert("No hero cards available in the discard pile!");
+          }
+      
+          // Draw a card after adding the hero card
+          setTimeout(() => {
+            const randomCard = { ...cardList[Math.floor(Math.random() * cardList.length)], uniqueId: Date.now() + Math.random() };
+            setPlayerHand((prevHand) => [...prevHand, randomCard]);
+            alert("You drew a card!");
+          }, 500); // Add a slight delay for better user experience
         } else {
-          alert("Nothing happens.");
+          alert("EmberLeaf effect did not activate.");
         }
         return;
       }
@@ -832,6 +904,66 @@ const GameBoard = () => {
           alert("Arachnea effect did not activate.");
         }
         return;
+      }
+
+      // Gorgon Effect
+      if (card.id === 17) { // Gorgon ID
+        if (totalRoll >= 5) {
+          const itemCards = discardPile.filter((discardedCard) => discardedCard.type === "Item");
+          if (itemCards.length > 0) {
+            setItemCardsInDiscard(itemCards);
+            setIsGorgonPopupOpen(true);
+          } else {
+            alert("No item cards available in the discard pile!");
+          }
+        } else {
+          alert("Gorgon effect did not activate.");
+        }
+        return;
+      }
+
+      if (card.id === 9) { // Cyborg 20xx ID
+        if (totalRoll >= 8) {
+          alert("Cyborg 20xx effect activated! Drawing cards until you have 8 cards in your hand.");
+          setPlayerHand((prevHand) => {
+            const cardsNeeded = 8 - prevHand.length;
+            if (cardsNeeded > 0) {
+              const newCards = getRandomCards(cardsNeeded);
+              return [...prevHand, ...newCards];
+            }
+            return prevHand;
+          });
+        } else {
+          alert("Cyborg 20xx effect did not activate.");
+        }
+        return;
+      }
+
+      if (card.id === 8) { // Twin Snakes ID
+        if (totalRoll >= 7) {
+          alert("Twin Snakes effect activated! Drawing 2 random cards from the discard pile...");
+          if (discardPile.length >= 2) {
+            const shuffledDiscard = [...discardPile].sort(() => Math.random() - 0.5);
+            const cardsToDraw = shuffledDiscard.slice(0, 2);
+            setPlayerHand((prevHand) => [...prevHand, ...cardsToDraw]);
+            setDiscardPile((prev) =>
+              prev.filter((card) => !cardsToDraw.includes(card))
+            );
+          } else if (discardPile.length > 0) {
+            alert("Not enough cards in the discard pile. Drawing all available cards...");
+            setPlayerHand((prevHand) => [...prevHand, ...discardPile]);
+            setDiscardPile([]);
+          } else {
+            alert("The discard pile is empty! No cards to draw.");
+          }
+        } else {
+          alert("Twin Snakes effect did not activate.");
+        }
+        return;
+      }
+
+      if (card.mightyOakBoost) {
+        card.boost += 2; // Incrementally add the boost
       }
     }, 100);
   };
@@ -954,7 +1086,10 @@ const GameBoard = () => {
                     <div style={styles.boostIndicator}>+{card.boost}</div>
                   )}
                   {card.hydraEffect && (
-                    <div style={styles.hydraCircle}>+1</div>
+                    <div style={styles.hydraCircle}>+1</div> // Persistent Hydra indicator
+                  )}
+                  {card.mightyOakBoost && (
+                    <div style={styles.mightyOakIndicator}>+{card.boost}</div>
                   )}
                   {heroItems[index] && (
                     <div style={styles.itemIndicator}>
@@ -971,14 +1106,12 @@ const GameBoard = () => {
                       onClick={() => {
                         if (card.id === 7) {
                           handleBullseyeEffect();
-                        } else if (card.id === 8) {
-                          alert("Hydra effect is passive and already applied!");
                         } else {
                           handleHeroRoll(card, index);
                         }
                       }}
                     >
-                      {card.id === 7 ? "Bullseye" : card.id === 8 ? "Hydra" : "Hero Action"}
+                      {card.id === 7 ? "Bullseye" : "Hero Action"}
                     </button>
                   )}
                 </div>
@@ -1091,30 +1224,76 @@ const GameBoard = () => {
         {isCriticalBoostPopupOpen && (
           <div style={styles.popupOverlay}>
             <div style={styles.popupContainer}>
-              <h3>Select a card to discard</h3>
-              <div style={styles.popupHand}>
+              <h3 style={{
+                color: 'white',
+                textAlign: 'center',
+                marginBottom: '20px',
+                textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
+              }}>Select a Card to Discard</h3>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: '15px',
+                marginBottom: '20px',
+              }}>
                 {playerHand.map((card) => (
                   <div
                     key={card.uniqueId}
                     style={{
-                      ...styles.card,
-                      border:
-                        selectedCardToDiscard?.uniqueId === card.uniqueId
-                          ? "2px solid red"
-                          : "1px solid #888",
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      border: selectedCardToDiscard?.uniqueId === card.uniqueId
+                        ? "2px solid red"
+                        : "2px solid #4CAF50",
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      width: '120px',
+                      height: '160px',
                     }}
                     onClick={() => setSelectedCardToDiscard(card)}
                   >
-                    <img src={card.image} alt={`Card ${card.id}`} style={styles.cardImage} />
+                    <img
+                      src={card.image}
+                      alt={`Card ${card.id}`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
                   </div>
                 ))}
               </div>
-              <button onClick={confirmCriticalBoost} style={styles.confirmButton}>
+              <button
+                style={{
+                  display: 'block',
+                  margin: '0 auto 10px',
+                  padding: '8px 20px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+                onClick={confirmCriticalBoost}
+              >
                 Confirm
               </button>
               <button
+                style={{
+                  display: 'block',
+                  margin: '0 auto',
+                  padding: '8px 20px',
+                  backgroundColor: '#FF5722',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
                 onClick={() => setIsCriticalBoostPopupOpen(false)}
-                style={styles.cancelButton}
               >
                 Cancel
               </button>
@@ -1300,6 +1479,100 @@ const GameBoard = () => {
                   fontSize: '1rem',
                 }}
                 onClick={() => setIsWhiteMagePopupOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        {isGorgonPopupOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}>
+            <div style={{
+              backgroundColor: '#1E7149',
+              padding: '20px',
+              borderRadius: '10px',
+              maxWidth: '80%',
+              maxHeight: '80%',
+              overflow: 'auto',
+              border: '3px solid #4CAF50',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+            }}>
+              <h3 style={{
+                color: 'white',
+                textAlign: 'center',
+                marginBottom: '20px',
+                textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
+              }}>Select an Item Card from the Discard Pile</h3>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: '15px',
+                marginBottom: '20px',
+              }}>
+                {itemCardsInDiscard.map((card, index) => (
+                  <div 
+                    key={index} 
+                    style={{
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      ':hover': {
+                        transform: 'scale(1.05)',
+                      }
+                    }}
+                    onClick={() => {
+                      setPlayerHand((prev) => [...prev, card]);
+                      setDiscardPile((prev) => prev.filter((c) => c.uniqueId !== card.uniqueId));
+                      setIsGorgonPopupOpen(false);
+                    }}
+                  >
+                    <img 
+                      src={cardImageMap[card.name] || card.image || ''}
+                      alt={card.name || 'Card'} 
+                      style={{
+                        width: '120px',
+                        height: '160px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '2px solid #4CAF50',
+                      }}
+                      onError={(e) => {
+                        e.target.src = ''; // Handle image loading errors
+                      }}
+                    />
+                    <p style={{
+                      color: 'white',
+                      textAlign: 'center',
+                      marginTop: '5px',
+                      fontSize: '0.9rem',
+                    }}>{card.name || 'Unknown Card'}</p>
+                  </div>
+                ))}
+              </div>
+              <button 
+                style={{
+                  display: 'block',
+                  margin: '0 auto',
+                  padding: '8px 20px',
+                  backgroundColor: '#FF5722',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+                onClick={() => setIsGorgonPopupOpen(false)}
               >
                 Cancel
               </button>
@@ -1620,6 +1893,18 @@ const styles = {
     width: "20px",
     height: "20px",
     objectFit: "contain",
+  },
+  mightyOakIndicator: {
+    position: "absolute",
+    bottom: "5px",
+    left: "5px",
+    backgroundColor: "#4CAF50",
+    color: "#fff",
+    padding: "2px 5px",
+    borderRadius: "3px",
+    fontSize: "0.8rem",
+    fontWeight: "bold",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
   },
 };
 

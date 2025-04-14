@@ -23,17 +23,16 @@ let activeGames = new Map();
 let playerCount = 0;
 
 const cardList = [
-  { id: 1, name: "MooseDruid", type: "Hero", affinity: "Druid", min: 4, max: 8 },
+  { id: 1, name: "EmberLeaf", type: "Hero", affinity: "Druid", min: 4, max: 8 },
   { id: 2, name: "DarkGoblin", type: "Hero", affinity: "Dark", min: 0, max: 6 },
   { id: 3, name: "DruidMask", type: "Item", affinity: "Druid" },
-  { id: 4, name: "DecoyDoll", type: "Item", affinity: null },
   { id: 5, name: "CriticalBoost", type: "Spell", affinity: null },
   { id: 6, name: "LostSoul", type: "Hero", affinity: "Undead", min: 0, max: 6 },
   { id: 7, name: "Bullseye", type: "Hero", affinity: "Consort", min: 0, max: 4 },
-  { id: 8, name: "Hydra", type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
+  { id: 8, name: "TwinSnakes", type: "Hero", affinity: "Serpentine", min: 0, max: 0 },
   { id: 9, name: "Cyborg20xx", type: "Hero", affinity: "Cyborg", min: 4, max: 10 },
-  { id: 10, name: "Switcheroo", type: "Spell" },
-  { id: 11, name: "MAD", type: "Spell" },
+  //{ id: 10, name: "Switcheroo", type: "Spell" },
+  //{ id: 11, name: "MAD", type: "Spell" },
   { id: 12, name: "RoboMask", type: "Item", affinity: "Cyborg" },
   { id: 13, name: "SpectreMask", type: "Item", affinity: "Undead" },
   { id: 15, name: "SerpentMask", type: "Item", affinity: "Serpentine" },
@@ -46,9 +45,10 @@ const cardList = [
   { id: 23, name: "MightyOak", type: "Hero", affinity: "Druid", min: 0, max: 0 },
   { id: 24, name: "BearCleaver", type: "Hero", affinity: "Druid", min: 0, max: 8 },
   { id: 25, name: "Arachnea", type: "Hero", affinity: "Dark", min: 6, max: 8 },
-  { id: 26, name: "Gargoyle", type: "Hero", affinity: "Dark", min: 0, max: 9 },
   { id: 27, name: "Vampire", type: "Hero", affinity: "Undead", min: 0, max: 6 },
   { id: 28, name: "GhastlyGhoul", type: "Hero", affinity: "Undead", min: 0, max: 10 },
+  { id: 29, name: "DiamondRing",type: "Spell", affinity: null },
+  { id: 30, name: "FreeDraw", type: "Spell", affinity: null },
 ];
 
 function createGame(player1, player2) {
