@@ -118,6 +118,9 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
     const [selectedOpponentCard, setSelectedOpponentCard] = useState(null);
     const [timer, setTimer] = useState(60); // 60 seconds
     const [timerActive, setTimerActive] = useState(true);
+    const [gameStarted, setGameStarted] = useState(false);
+    const [showAIPrompt, setShowAIPrompt] = useState(true);
+    const [isAIEnabled, setIsAIEnabled] = useState(false);
 
     useEffect(() => {
         let interval;
@@ -170,6 +173,177 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
     
         return bonus;
     }
+    // Add this useEffect for AI moves
+    useEffect(() => {
+        if (gameStarted && currentPlayer === 2 && isAIEnabled) {
+          const aiDelay = setTimeout(() => {
+            if (player2ActionPoints > 0) {
+              makeAIMove();
+            } else {
+              switchTurn();
+            }
+          }, 1500); // 1.5 second delay for AI "thinking"
+      
+          return () => clearTimeout(aiDelay);
+        }
+      }, [currentPlayer, player2ActionPoints, isAIEnabled, gameStarted, player2Hand, playedCards2]);
+
+    // Function to place a random hero in an opponent's slot
+    const placeRandHero = () => {
+        // Find empty slots
+        const emptySlots = playedCards2
+          .map((card, index) => ({ card, index }))
+          .filter(slot => slot.card === null);
+      
+        if (emptySlots.length === 0) return;
+      
+        // Get random hero from hand
+        const heroesInHand = player2Hand.filter(card => card.type === "Hero");
+        if (heroesInHand.length === 0) return;
+      
+        const randomHero = heroesInHand[Math.floor(Math.random() * heroesInHand.length)];
+        const randomSlot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
+      
+        setPlayedCards2(prev => {
+          const newPlayed = [...prev];
+          newPlayed[randomSlot.index] = { ...randomHero, items: [] };
+          return newPlayed;
+        });
+      
+        // Remove from hand
+        setPlayer2Hand(prev => prev.filter(card => card.uniqueId !== randomHero.uniqueId));
+        
+        // Deduct action point
+        setPlayer2ActionPoints(prev => prev - 1);
+      };
+      
+      const placeRandItem = () => {
+        // Find heroes without items
+        const eligibleHeroes = playedCards2
+          .map((card, index) => ({ card, index }))
+          .filter(slot => 
+            slot.card?.type === "Hero" && 
+            (!slot.card.items || slot.card.items.length === 0)
+          );
+      
+        if (eligibleHeroes.length === 0) return;
+      
+        // Get random item from hand
+        const itemsInHand = player2Hand.filter(card => card.type === "Item");
+        if (itemsInHand.length === 0) return;
+      
+        const randomItem = itemsInHand[Math.floor(Math.random() * itemsInHand.length)];
+        const randomHero = eligibleHeroes[Math.floor(Math.random() * eligibleHeroes.length)];
+      
+        setPlayedCards2(prev => {
+          const newPlayed = [...prev];
+          newPlayed[randomHero.index] = {
+            ...newPlayed[randomHero.index],
+            items: [...(newPlayed[randomHero.index].items || []), randomItem]
+          };
+          return newPlayed;
+        });
+      
+        // Remove from hand
+        setPlayer2Hand(prev => prev.filter(card => card.uniqueId !== randomItem.uniqueId));
+        
+        // Deduct action point
+        setPlayer2ActionPoints(prev => prev - 1);
+      };
+    
+  const makeAIMove = () => {
+    if (currentPlayer !== 2 || !isAIEnabled) return;
+  
+    const possibleActions = [];
+    
+    // Add possible actions with weights
+    if (player2Hand.length > 0) {
+      possibleActions.push('playCard', 'playCard', 'playCard');
+    }
+    if (player2Hand.some(card => card.type === 'Spell')) {
+      possibleActions.push('castSpell', 'castSpell');
+    }
+    possibleActions.push('drawCard');
+    if (player2Hand.length > 0) {
+      possibleActions.push('replaceHand');
+    }
+    if (playedCards2.some(card => card?.type === 'Hero' && card.max !== 0)) {
+      possibleActions.push('useHeroAbility', 'useHeroAbility');
+    }
+  
+    if (possibleActions.length === 0) {
+      switchTurn();
+      return;
+    }
+  
+    const randomAction = possibleActions[
+      Math.floor(Math.random() * possibleActions.length)
+    ];
+  
+    // Execute the chosen action
+    switch(randomAction) {
+      case 'playCard':
+        if (player2Hand.length > 0) {
+          const randomCardIndex = Math.floor(Math.random() * player2Hand.length);
+          const cardToPlay = player2Hand[randomCardIndex];
+          
+          if (cardToPlay.type === 'Hero' || cardToPlay.type === 'Item') {
+            const availableSlots = playedCards2
+              .map((card, index) => ({ card, index }))
+              .filter(slot => {
+                if (cardToPlay.type === 'Hero') return slot.card === null;
+                if (cardToPlay.type === 'Item') {
+                  return slot.card !== null && slot.card.type === 'Hero' && 
+                        (!slot.card.items || slot.card.items.length === 0);
+                }
+                return false;
+              });
+            
+            if (availableSlots.length > 0) {
+              const targetSlot = availableSlots[Math.floor(Math.random() * availableSlots.length)];
+              handleDrop({
+                dataTransfer: {
+                  getData: () => JSON.stringify(cardToPlay)
+                },
+                preventDefault: () => {}
+              }, targetSlot.index);
+            }
+          }
+        }
+        break;
+        
+      case 'castSpell':
+        const spells = player2Hand.filter(card => card.type === 'Spell');
+        if (spells.length > 0) {
+          const randomSpell = spells[Math.floor(Math.random() * spells.length)];
+          castSpell(randomSpell);
+        }
+        break;
+        
+      case 'drawCard':
+        handleDrawCard();
+        break;
+        
+      case 'replaceHand':
+        if (player2Hand.length > 0 && Math.random() < 0.5) {
+          discardAllCards();
+        }
+        break;
+        
+      case 'useHeroAbility':
+        const heroesWithAbilities = playedCards2
+          .filter(card => card?.type === 'Hero' && card.max !== 0)
+          .map((card, index) => ({ card, index }));
+        
+        if (heroesWithAbilities.length > 0) {
+          const randomHero = heroesWithAbilities[
+            Math.floor(Math.random() * heroesWithAbilities.length)
+          ];
+          heroEffect(randomHero.card, randomHero.index);
+        }
+        break;
+    }
+  };
 
     const heroEffect = (card, slotIndex) => {
         if (!card || (card.type !== "Hero")) return;
@@ -1091,14 +1265,83 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
     const lastDiscardedCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null;
 
     return (
-
         <div style={{ width: "100vw", height: "120vh", overflow: "hidden", margin: 0, padding: 0 }}>
-        <div style={styles.gameBoard}>
-            <ActionPoints points={currentPlayer === 1 ? player1ActionPoints : player2ActionPoints} />
-            <DrawCard onDrawCard={handleDrawCard} />
-            <div style={styles.timer}>
-                {timer}s
+        {showAIPrompt && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            zIndex: 1000,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}>
+            <h2>Game Mode Selection</h2>
+            <p>Choose your opponent:</p>
+            <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
+              <button 
+                onClick={() => {
+                  setIsAIEnabled(true);
+                  setShowAIPrompt(false);
+                  setGameStarted(true);
+                }}
+                style={styles.modeButton}
+              >
+                Play vs AI
+              </button>
+              <button 
+                onClick={() => {
+                  setIsAIEnabled(false);
+                  setShowAIPrompt(false);
+                  setGameStarted(true);
+                }}
+                style={styles.modeButton}
+              >
+                Play vs Human
+              </button>
             </div>
+          </div>
+        )}
+          
+        {gameStarted && (
+        <div style={styles.gameBoard}>
+                <ActionPoints 
+                points={currentPlayer === 1 ? player1ActionPoints : player2ActionPoints} 
+                isAI={currentPlayer === 2 && isAIEnabled}
+                />
+                <DrawCard 
+                onDrawCard={handleDrawCard} 
+                disabled={currentPlayer === 2 && isAIEnabled}
+                />
+                <div style={styles.timer}>
+                {timer}s
+                </div>
+                {currentPlayer === 2 && isAIEnabled && (
+                    <div style={{
+                        position: 'fixed',
+                        top: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                        color: 'white',
+                        padding: '10px 20px',
+                        borderRadius: '20px',
+                        zIndex: 100,
+                        fontSize: '18px'
+                    }}>
+                        AI is thinking... (Actions left: {player2ActionPoints})
+                    </div>
+                    )}
+
+            {/* Add interaction blocker during AI turn */}
+                {currentPlayer === 2 && isAIEnabled && (
+                    <div style={styles.aiBlocker} />
+                )}
 
             {/* Player 2 Card Slots */}
             <div style={styles.playArea}>
@@ -1183,72 +1426,120 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
                     </div>
                 ))}
             </div>
-            
-{/* Player Hand Section */}
-
-<h2 style={{ textAlign: "center" }}>Player {currentPlayer} Hand</h2>
-<div
-  style={{
-    position: "relative",
-    width: "600px",
-    height: "250px",
-    margin: "0 auto",
-    marginBottom: "40px" // Adjust this value for extra space below if needed
-  }}
->
-  {(currentPlayer === 1 ? player1Hand : player2Hand).map((card, i, arr) => {
-    const middleIndex = (arr.length - 1) / 2;
-    const rotation = (i - middleIndex) * 25;
-    const offsetX = (i - middleIndex) * 30 + 220;
-    const offsetY = 10;
-    const isHovered = hoveredCardId === card.uniqueId;
-    return (
-      <div
-        key={`hand-${card.uniqueId}`}
-        draggable
-        onDragStart={(e) => handleDragStart(e, card)}
-        onMouseEnter={() => {
-          setHoveredCardId(card.uniqueId);
-          if (card.type === "Spell") {
-            setHoveredSpell(card);
-          }
-        }}
-        onMouseLeave={() => {
-          setHoveredCardId(null);
-          if (card.type === "Spell") {
-            setHoveredSpell(null);
-          }
-        }}
-        style={{
-          position: "absolute",
-          width: "150px",
-          height: "200px",
-          border: "2px solid #888",
-          borderRadius: "10px",
-          overflow: "hidden",
-          cursor: "grab",
-          transition: "transform 0.2s ease",
-          transform: `translate(${offsetX}px, ${offsetY}px) rotate(${rotation}deg) scale(${isHovered ? 1.1 : 1})`,
-          transformOrigin: "bottom center"
-        }}
-      >
-        <img
-          src={card.image}
-          alt={`Card ${card.id}`}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
-        {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
-          <div style={styles.spellEffectContainer}>
-            <button onClick={() => castSpell(card)} style={styles.spellEffectButton}>
-              Cast Spell
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  })}
-</div>
-
+                        
+            {/* Player Hand Section */}
+            <h2 style={{ textAlign: "center" }}>Player {currentPlayer} Hand</h2>
+                {!isAIEnabled && currentPlayer === 1 && (
+                    <div style={{ position: "relative", width: "600px", height: "250px", margin: "0 auto", marginBottom: "40px" }}>
+                        {player1Hand.map((card, i, arr) => {
+                            const middleIndex = (arr.length - 1) / 2;
+                            const rotation = (i - middleIndex) * 25;
+                            const offsetX = (i - middleIndex) * 30 + 220;
+                            const offsetY = 10;
+                            const isHovered = hoveredCardId === card.uniqueId;
+                            return (
+                                <div
+                                    key={`hand-${card.uniqueId}`}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, card)}
+                                    onMouseEnter={() => {
+                                        setHoveredCardId(card.uniqueId);
+                                        if (card.type === "Spell") {
+                                            setHoveredSpell(card);
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        setHoveredCardId(null);
+                                        if (card.type === "Spell") {
+                                            setHoveredSpell(null);
+                                        }
+                                    }}
+                                    style={{
+                                        position: "absolute",
+                                        width: "150px",
+                                        height: "200px",
+                                        border: "2px solid #888",
+                                        borderRadius: "10px",
+                                        overflow: "hidden",
+                                        cursor: "grab",
+                                        transition: "transform 0.2s ease",
+                                        transform: `translate(${offsetX}px, ${offsetY}px) rotate(${rotation}deg) scale(${isHovered ? 1.1 : 1})`,
+                                        transformOrigin: "bottom center"
+                                    }}
+                                >
+                                    <img
+                                        src={card.image}
+                                        alt={`Card ${card.id}`}
+                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                    />
+                                    {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
+                                        <div style={styles.spellEffectContainer}>
+                                            <button onClick={() => castSpell(card)} style={styles.spellEffectButton}>
+                                                Cast Spell
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+                {!isAIEnabled && currentPlayer === 2 && (
+                    <div style={{ position: "relative", width: "600px", height: "250px", margin: "0 auto", marginBottom: "40px" }}>
+                        {player2Hand.map((card, i, arr) => {
+                            const middleIndex = (arr.length - 1) / 2;
+                            const rotation = (i - middleIndex) * 25;
+                            const offsetX = (i - middleIndex) * 30 + 220;
+                            const offsetY = 10;
+                            const isHovered = hoveredCardId === card.uniqueId;
+                            return (
+                                <div
+                                    key={`hand-${card.uniqueId}`}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, card)}
+                                    onMouseEnter={() => {
+                                        setHoveredCardId(card.uniqueId);
+                                        if (card.type === "Spell") {
+                                            setHoveredSpell(card);
+                                        }
+                                    }}
+                                    onMouseLeave={() => {
+                                        setHoveredCardId(null);
+                                        if (card.type === "Spell") {
+                                            setHoveredSpell(null);
+                                        }
+                                    }}
+                                    style={{
+                                        position: "absolute",
+                                        width: "150px",
+                                        height: "200px",
+                                        border: "2px solid #888",
+                                        borderRadius: "10px",
+                                        overflow: "hidden",
+                                        cursor: "grab",
+                                        transition: "transform 0.2s ease",
+                                        transform: `translate(${offsetX}px, ${offsetY}px) rotate(${rotation}deg) scale(${isHovered ? 1.1 : 1})`,
+                                        transformOrigin: "bottom center"
+                                    }}
+                                >
+                                    <img
+                                        src={card.image}
+                                        alt={`Card ${card.id}`}
+                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                    />
+                                    {card.type === "Spell" && hoveredSpell?.uniqueId === card.uniqueId && (
+                                        <div style={styles.spellEffectContainer}>
+                                            <button onClick={() => castSpell(card)} style={styles.spellEffectButton}>
+                                                Cast Spell
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+                
             {/* Discard Pile and Discard Button */}
             <div style={styles.discardContainer}>
                 <div style={styles.discardPile}>
@@ -1554,13 +1845,10 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
                     </div>
                 )}
         </div>
-        
+          )}
     </div>
-
     );
-
-};
-
+}
 // Styles
 const styles = {
     gameBoard: {
@@ -1850,6 +2138,64 @@ const styles = {
         justifyContent: "center",
         animation: "arcaneGlow 3s ease-in-out infinite alternate",
         zIndex: 9999,
+      },
+      modeButton: {
+        padding: '15px 30px',
+        fontSize: '18px',
+        backgroundColor: '#4CAF50',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        minWidth: '200px',
+        transition: 'all 0.3s',
+        ':hover': {
+          transform: 'scale(1.05)',
+          boxShadow: '0 0 15px rgba(76, 175, 80, 0.6)'
+        }
+      },
+    
+      gameHeader: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '20px',
+        marginBottom: '20px',
+        position: 'relative'
+      },
+    
+      aiThinking: {
+        position: 'absolute',
+        right: '20px',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        color: 'white',
+        padding: '10px 20px',
+        borderRadius: '20px',
+        fontSize: '18px'
+      },
+    
+      aiBlocker: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10,
+        cursor: 'not-allowed'
+      },
+    
+      drawButton: {
+        padding: '10px 20px',
+        fontSize: '16px',
+        backgroundColor: '#3F51B5',
+        color: 'white',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        ':hover': {
+          backgroundColor: '#303F9F'
+        }
       }
 };
 
