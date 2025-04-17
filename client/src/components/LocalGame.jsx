@@ -2,42 +2,41 @@ import React, { useState, useEffect } from "react";
 import ActionPoints from "./ActionPoints";
 import DrawCard from "./DrawCard";
 // Import Card Images
-import MooseDruid from "../assets/MooseDruid.png";
-import DarkGoblin from "../assets/DarkGoblin.png";
-import DruidMask from "../assets/DruidMask.png";
-import DecoyDoll from "../assets/DecoyDoll.png";
-import CriticalBoost from "../assets/CriticalBoost.png";
-import LostSoul from "../assets/Lost Soul.png";
-import Bullseye from "../assets/Bullseye.png";
-import Hydra from "../assets/Hydra.png";
-import Cyborg20xx from "../assets/Cyborg 20xx.png";
-import Switcheroo from "../assets/Switcheroo.png";
-import MAD from "../assets/MAD.png";
-import RoboMask from"../assets/RoboMask.png"
-import SpectreMask from "../assets/SpectreMask.png"
-import ChimeraMask from "../assets/ChimeraMask.png"
-import SerpentMask from "../assets/SerpentMask.png"
-import ConsortArmor from "../assets/ConsortHelmet.png"
-import BearCleaver from "../assets/BearCleaver.png"
-import Cerberus from "../assets/Cerberus.png"
-import Gargoyle from "../assets/Gargoyle.png"
-import Ghoul from "../assets/GhastlyGhoul.png"
-import Gorgon from "../assets/Gorgon.png"
-import MightyOak from "../assets/MightyOak.png"
-import Ragnarok from "../assets/Ragnarok.png"
-import TimeMachine from "../assets/TimeMachine.png"
-import TitaniumGiant from "../assets/TitaniumGiant.png"
-import Vampire from "../assets/Vampire.png"
-import WhiteMage from "../assets/WhiteMage.png"
-import WingedSerpent from "../assets/WingedSerpent.png"
+import MooseDruid from "../assets/heros/MooseDruid.png";
+import DarkGoblin from "../assets/heros/DarkGoblin.png";
+import DruidMask from "../assets/items/DruidMask.png";
+import CriticalBoost from "../assets/spell/CriticalBoost.png";
+import LostSoul from "../assets/heros/LostSoul.png";
+import Bullseye from "../assets/heros/Bullseye.png";
+import Hydra from "../assets/heros/Hydra.png";
+import Cyborg20xx from "../assets/heros/Cyborg20xx.png";
+import Switcheroo from "../assets/spell/Switcheroo.png";
+import MAD from "../assets/spell/MAD.png";
+import RoboMask from"../assets/items/RoboMask.png"
+import SpectreMask from "../assets/items/SpectreMask.png"
+import ChimeraMask from "../assets/items/ChimeraMask.png"
+import SerpentMask from "../assets/items/SerpentMask.png"
+import ConsortArmor from "../assets/items/ConsortHelmet.png"
+import BearCleaver from "../assets/heros/BearCleaver.png"
+import Cerberus from "../assets/heros/Cerberus.png"
+import Gargoyle from "../assets/heros/Gargoyle.png"
+import Ghoul from "../assets/heros/GhastlyGhoul.png"
+import Gorgon from "../assets/heros/Gorgon.png"
+import MightyOak from "../assets/heros/MightyOak.png"
+import Ragnarok from "../assets/heros/Ragnarok.png"
+import TimeMachine from "../assets/heros/TimeMachine.png"
+import TitaniumGiant from "../assets/heros/TitaniumGiant.png"
+import Vampire from "../assets/heros/Vampire.png"
+import WhiteMage from "../assets/heros/WhiteMage.png"
+import WingedSerpent from "../assets/heros/WingedSerpent.png"
 
 
-import dice1 from "../assets/dice1.png";
-import dice2 from "../assets/dice2.png";
-import dice3 from "../assets/dice3.png";
-import dice4 from "../assets/dice4.png";
-import dice5 from "../assets/dice5.png";
-import dice6 from "../assets/dice6.png";
+import dice1 from "../assets/dice/dice1.png";
+import dice2 from "../assets/dice/dice2.png";
+import dice3 from "../assets/dice/dice3.png";
+import dice4 from "../assets/dice/dice4.png";
+import dice5 from "../assets/dice/dice5.png";
+import dice6 from "../assets/dice/dice6.png";
 
 const GameBoard = () => {
 const [hoveredCardId, setHoveredCardId] = useState(null);
@@ -47,7 +46,6 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
         { id: 1, image: MooseDruid, type: "Hero", affinity: "Druid", min: 4, max: 8}, 
         { id: 2, image: DarkGoblin, type: "Hero", affinity: "Dark" , min: 0, max: 6}, 
         { id: 3, image: DruidMask, type: "Item", affinity: "Druid"}, 
-        { id: 4, image: DecoyDoll, type: "Item", affinity: null },
         { id: 5, image: CriticalBoost, type: "Spell", affinity: null },
         { id: 6, image: LostSoul, type: "Hero", affinity: "Undead" , min: 0, max: 6},
         { id: 7, image: Bullseye, type: "Hero", affinity: "Consort" , min: 0, max: 4},
@@ -1310,14 +1308,8 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
           
         {gameStarted && (
         <div style={styles.gameBoard}>
-                <ActionPoints 
-                points={currentPlayer === 1 ? player1ActionPoints : player2ActionPoints} 
-                isAI={currentPlayer === 2 && isAIEnabled}
-                />
-                <DrawCard 
-                onDrawCard={handleDrawCard} 
-                disabled={currentPlayer === 2 && isAIEnabled}
-                />
+                <ActionPoints/>
+                <DrawCard/>
                 <div style={styles.timer}>
                 {timer}s
                 </div>
@@ -1429,7 +1421,7 @@ const [hoveredCardId, setHoveredCardId] = useState(null);
                         
             {/* Player Hand Section */}
             <h2 style={{ textAlign: "center" }}>Player {currentPlayer} Hand</h2>
-                {!isAIEnabled && currentPlayer === 1 && (
+                {currentPlayer === 1 && (
                     <div style={{ position: "relative", width: "600px", height: "250px", margin: "0 auto", marginBottom: "40px" }}>
                         {player1Hand.map((card, i, arr) => {
                             const middleIndex = (arr.length - 1) / 2;

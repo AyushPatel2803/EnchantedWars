@@ -12,7 +12,7 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     position: absolute;
-    top: 60%; /* Adjusted from 50% to 60% to move it lower */
+    top: 50%; /* Adjusted from 50% to 60% to move it lower */
 }
 .card:hover {
     transform: scale(1.1);

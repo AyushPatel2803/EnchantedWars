@@ -31,6 +31,9 @@ function MainPage() {
     setIsSearching(true);
     socket.emit("find_match", playerName); // Send matchmaking request
   };
+  const handleLocalMatch = () => {
+    navigate("/local-game")
+  }
 
   return (
     <div className="background-wrapper">
@@ -54,7 +57,7 @@ function MainPage() {
         
           <button
             className="modern-button"
-            onClick={() => navigate("/local-game")}
+            onClick={handleLocalMatch}
           >
             Local Match
         </button>
