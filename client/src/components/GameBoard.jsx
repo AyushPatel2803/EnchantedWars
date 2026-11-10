@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import GameBackground from "../assets/background.png"; // Shared background image, used to visually tie this screen to the Main Menu and Local Game board
 import Timer from "./Timer";
 import DrawCard from "./DrawCard";
 import PartyLeaderSelection from "./PartyLeaderSelection";
@@ -1128,6 +1129,12 @@ const GameBoard = () => {
   return (
     <div className="game-board-container">
       <div style={styles.gameBoard}>
+        <div className="ew-bg-pan" style={{
+          background: `linear-gradient(rgba(8,18,14,0.82), rgba(8,18,14,0.9)), url(${GameBackground}) center center / cover no-repeat`,
+        }} />
+        <div className="ew-bg-smoke" />
+        <div className="ew-bg-orb ew-bg-orb-a" />
+        <div className="ew-bg-orb ew-bg-orb-b" />
         <div
           style={{
             ...styles.playerNameContainer,
@@ -1753,6 +1760,9 @@ const styles = {
     boxSizing: "border-box",
     textAlign: "center",
     padding: "1vh",
+    backgroundColor: "#0b1a14",
+    isolation: "isolate",
+    overflow: "hidden",
     display: "flex",
     flexDirection: "column",
   

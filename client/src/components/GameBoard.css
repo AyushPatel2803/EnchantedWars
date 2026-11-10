@@ -4,7 +4,7 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
-    background-color: #162C24; /* So there's no white behind your game board */
+    background-color: #0b1a14; /* Matches Main Menu / Local Game dark backdrop so there's no white flash behind the image */
   }
   
   /* The main container used by GameBoard.jsx */

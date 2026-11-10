@@ -13,60 +13,62 @@ html, body {
   .background-wrapper {
     position: relative;
     min-height: 100vh;
-    overflow: hidden; /* Hide overflow from the breathing animation */
-    
-    /* Use your background image; adjust the path if needed */
-    background: url('./assets/background.png') center center no-repeat;
-    background-size: cover;
-    
-    /* Breathing animation: smoothly zoom in and out */
-    animation: breathing 8s ease-in-out infinite;
+    overflow: hidden; /* Hide overflow from the panning animation */
+    isolation: isolate; /* Keeps the negative z-index background layers contained in here */
+    background-color: #0b1a14; /* Fallback so there's never a flash of white while the image/animation settle in */
   }
 
-  
-  /* Add glowing orbs via pseudo-elements on the background-wrapper */
-  
-  /* Orb 1 */
-  .background-wrapper::before {
+  /* The actual background image now lives on its own layer (.bg-image-layer, rendered in
+     MainPage.jsx) so it can slowly pan/zoom on its own without dragging the page content
+     (title, input, buttons) along with it. */
+  .bg-image-layer {
+    background: url('./assets/background.png') center center no-repeat;
+    background-size: cover;
+  }
+
+  /* Glowing orbs, now with a gentle float path instead of just a pulse */
+  .background-wrapper::before,
+  .background-wrapper::after {
     content: "";
     position: absolute;
-    top: 30%;      /* Adjust position as needed */
-    left: 40%;     /* Adjust position as needed */
+    z-index: -1;
     width: 80px;
     height: 80px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(0,255,0,0.6) 0%, rgba(0,255,0,0) 70%);
     pointer-events: none;
-    animation: glow 2s ease-in-out infinite alternate;
+    animation: glow 9s ease-in-out infinite;
   }
-  
+
+  /* Orb 1 */
+  .background-wrapper::before {
+    top: 30%;
+    left: 40%;
+  }
+
   /* Orb 2 */
   .background-wrapper::after {
-    content: "";
-    position: absolute;
-    top: 60%;      /* Adjust as needed */
+    top: 60%;
     left: 70%;
     width: 100px;
     height: 100px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,255,0,0.6) 0%, rgba(0,255,0,0) 70%);
-    pointer-events: none;
-    animation: glow 2s ease-in-out infinite alternate;
+    animation-duration: 10.5s;
+    animation-direction: reverse;
   }
-  
-  /* Glow animation keyframes for the orbs */
+
+  /* Glow + float animation keyframes for the orbs */
   @keyframes glow {
     0% {
-      opacity: 0.4;
-      transform: scale(1);
+      opacity: 0.35;
+      transform: scale(1) translate(0, 0);
     }
     50% {
-      opacity: 0.8;
-      transform: scale(1.2);
+      opacity: 0.65;
+      transform: scale(1.25) translate(20px, -17px);
     }
     100% {
-      opacity: 0.4;
-      transform: scale(1);
+      opacity: 0.35;
+      transform: scale(1) translate(0, 0);
     }
   }
   

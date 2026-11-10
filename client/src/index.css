@@ -18,3 +18,84 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+/* ---------------------------------------------------------------------
+   Shared "living background" layers — a slow panning/zooming background
+   image, drifting smoke, and floating glow orbs. Used behind the Main
+   Menu, Game Mode Selection, and the game board so all three screens
+   feel like one continuously-alive scene rather than a static image.
+   The actual background-image (a single flattened illustration with
+   cards/arrows/smoke baked into it) is set inline per-usage since it
+   comes from a bundler-resolved import path; this stylesheet only
+   supplies the motion, layering (negative z-index, kept inside an
+   isolated stacking context so it never bleeds into sibling content),
+   and the extra independently-animated smoke/orb layers on top of it.
+--------------------------------------------------------------------- */
+
+.ew-bg-pan {
+  position: absolute;
+  inset: -16%;
+  z-index: -3;
+  pointer-events: none;
+  animation: ewBgPan 34s ease-in-out infinite;
+  will-change: transform;
+}
+
+.ew-bg-smoke {
+  position: absolute;
+  inset: -22%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 45% 28% at 22% 72%, rgba(220,255,230,0.13), transparent 70%),
+    radial-gradient(ellipse 38% 24% at 76% 28%, rgba(180,255,210,0.11), transparent 70%),
+    radial-gradient(ellipse 50% 30% at 55% 85%, rgba(200,255,220,0.09), transparent 70%);
+  filter: blur(8px);
+  animation: ewSmokeDrift 26s ease-in-out infinite alternate;
+}
+
+.ew-bg-orb {
+  position: absolute;
+  z-index: -1;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,255,120,0.55) 0%, rgba(0,255,120,0) 70%);
+  pointer-events: none;
+  filter: blur(1px);
+  animation: ewOrbFloat 9s ease-in-out infinite;
+}
+
+.ew-bg-orb-a {
+  top: 28%;
+  left: 38%;
+}
+
+.ew-bg-orb-b {
+  top: 62%;
+  left: 68%;
+  width: 110px;
+  height: 110px;
+  animation-duration: 10.5s;
+  animation-direction: reverse;
+}
+
+@keyframes ewBgPan {
+  0%   { transform: scale(1.09) translate(0%, 0%); }
+  25%  { transform: scale(1.11) translate(-1.8%, 1.3%); }
+  50%  { transform: scale(1.13) translate(1.3%, -1.8%); }
+  75%  { transform: scale(1.11) translate(1.8%, 1%); }
+  100% { transform: scale(1.09) translate(0%, 0%); }
+}
+
+@keyframes ewSmokeDrift {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 0.85; }
+  100% { transform: translate(5%, -4%) rotate(2.5deg) scale(1.03); opacity: 1; }
+}
+
+@keyframes ewOrbFloat {
+  0%   { opacity: 0.35; transform: translate(0, 0) scale(1); }
+  50%  { opacity: 0.65; transform: translate(20px, -17px) scale(1.25); }
+  100% { opacity: 0.35; transform: translate(0, 0) scale(1); }
+}

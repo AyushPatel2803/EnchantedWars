@@ -37,6 +37,10 @@ function MainPage() {
 
   return (
     <div className="background-wrapper">
+    <div className="ew-bg-pan bg-image-layer" />
+    <div className="ew-bg-smoke" />
+    <div className="ew-bg-orb ew-bg-orb-a" />
+    <div className="ew-bg-orb ew-bg-orb-b" />
     <div className="main-container">
     <img src={TitlePNG} alt="Enchanted Wars" className="title-image" />      <div className="actions">
         <input
