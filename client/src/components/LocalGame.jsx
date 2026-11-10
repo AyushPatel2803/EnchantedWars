@@ -2624,18 +2624,6 @@ const styles = {
         fontSize: "11px",
         color: "#8aa698",
     },
-    cancelButton: {
-        position: 'absolute',
-        bottom: '120px',
-        right: '20px',
-        padding: '10px 20px',
-        backgroundColor: '#ff4444',
-        color: 'white',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        zIndex: 100
-    },
     selectionModal: {
         position: 'fixed',
         top: 0,
